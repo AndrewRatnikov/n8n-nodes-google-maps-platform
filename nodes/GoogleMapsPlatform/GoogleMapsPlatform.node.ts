@@ -1,5 +1,6 @@
 import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
 import { geocodingDescription } from './resources/geocoding';
+import { timezoneDescription } from './resources/timezone';
 
 export class GoogleMapsPlatform implements INodeType {
 	description: INodeTypeDescription = {
@@ -31,10 +32,14 @@ export class GoogleMapsPlatform implements INodeType {
 				name: 'resource',
 				type: 'options',
 				noDataExpression: true,
-				options: [{ name: 'Geocoding', value: 'geocoding' }],
+				options: [
+					{ name: 'Geocoding', value: 'geocoding' },
+					{ name: 'Timezone', value: 'timezone' },
+				],
 				default: 'geocoding',
 			},
 			...geocodingDescription,
+			...timezoneDescription,
 		],
 	};
 }
