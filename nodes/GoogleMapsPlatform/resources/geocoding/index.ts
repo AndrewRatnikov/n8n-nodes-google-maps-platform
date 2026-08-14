@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { handleGeocodingResponse } from '../../GenericFunctions';
 import { geocodeFieldsDescription } from './geocode';
 import { reverseGeocodeFieldsDescription } from './reverseGeocode';
 
@@ -21,16 +22,7 @@ export const geocodingDescription: INodeProperties[] = [
 				description: 'Convert an address into geographic coordinates',
 				routing: {
 					request: { method: 'GET', url: '/geocode/json' },
-					output: {
-						postReceive: [
-							{ type: 'rootProperty', properties: { property: 'results' } },
-							{
-								type: 'limit',
-								properties: { maxResults: 1 },
-								enabled: '={{!$parameter.returnAllMatches}}',
-							},
-						],
-					},
+					output: { postReceive: [handleGeocodingResponse] },
 				},
 			},
 			{
@@ -40,16 +32,7 @@ export const geocodingDescription: INodeProperties[] = [
 				description: 'Convert geographic coordinates into a human-readable address',
 				routing: {
 					request: { method: 'GET', url: '/geocode/json' },
-					output: {
-						postReceive: [
-							{ type: 'rootProperty', properties: { property: 'results' } },
-							{
-								type: 'limit',
-								properties: { maxResults: 1 },
-								enabled: '={{!$parameter.returnAllMatches}}',
-							},
-						],
-					},
+					output: { postReceive: [handleGeocodingResponse] },
 				},
 			},
 		],
