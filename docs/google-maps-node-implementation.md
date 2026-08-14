@@ -130,12 +130,18 @@ When prompted: choose **HTTP API** (this is the CLI's label for the declarative 
 
 What the scaffold already gives you (verified against `@n8n/node-cli@0.43.3`): MIT license, the `n8n-community-node-package` keyword, `icon` wired to light/dark placeholder SVGs, a `subtitle` expression, title-cased displayNames, `usableAsTool: true`, and the `publish.yml` GitHub Actions workflow. Less blank than you'd expect — the real work is replacing the placeholder icon and filling in resources.
 
-- [ ] Run the scaffold command with `--template declarative/custom`
-- [ ] Answer node kind: HTTP API
-- [ ] Answer base URL: `https://maps.googleapis.com/maps/api`
-- [ ] Answer auth type: API Key
-- [ ] Confirm scaffold output includes: MIT `LICENSE`, `n8n-community-node-package` keyword in `package.json`, light/dark icon files, `subtitle` expression, `usableAsTool: true`, `.github/workflows/publish.yml`
-- [ ] Replace the placeholder icon SVGs with a neutral geo/pin glyph in your own style (not Google's Maps pin/logo — see trademark note in Gotchas)
+**Non-interactive automation note (2026-08-14):** the base-URL and auth-type prompts are built on `@clack/prompts`, which needs a real TTY for arrow-key select navigation — plain piped stdin (`printf '...' | npm create ...`) looks like it's typing correctly (character echo) but hits EOF and exits without writing any files before finishing. Driving it headlessly requires a pty tool (`expect` worked); a plain pipe silently produces nothing. Not an issue running it by hand in a real terminal.
+
+Also confirmed: `n8n-node new` always creates the target as `path.resolve(cwd, name)` — a **new subdirectory** named after the package, never the current directory in place. If your repo root doesn't already match the package name (ours is `google-maps-platform-node/`, not `n8n-nodes-google-maps-platform/`), scaffold into a throwaway directory and merge the generated files into the repo root by hand rather than ending up with the whole package nested one level too deep. Don't copy the scaffold's own `.git/` — keep the repo's existing one. Also don't blindly overwrite `README.md`, `CLAUDE.md`, or `.gitignore` if the repo already has curated versions — merge deliberately (e.g. `CLAUDE.md` can stay project-specific and just add an `@AGENTS.md` reference line, since the scaffold's own `CLAUDE.md` is literally a one-line `@AGENTS.md` import).
+
+- [x] Run the scaffold command with `--template declarative/custom`
+- [x] Answer node kind: HTTP API
+- [x] Answer base URL: `https://maps.googleapis.com/maps/api`
+- [x] Answer auth type: API Key
+- [x] Confirm scaffold output includes: MIT `LICENSE`, `n8n-community-node-package` keyword in `package.json`, light/dark icon files, `subtitle` expression, `usableAsTool: true`, `.github/workflows/publish.yml` — all present; `LICENSE` itself isn't regenerated (repo already had one), but `package.json`'s `license: "MIT"` field is
+- [x] Replace the placeholder icon SVGs with a neutral geo/pin glyph in your own style (not Google's Maps pin/logo — see trademark note in Gotchas) — replaced the scaffold's generic "CPU" glyph with a map-pin glyph in both the node's icon files and, additionally, the credential's (see below)
+- [x] `npm install`, `npm run lint`, `npm run build` all pass clean after fixing two scaffold placeholders lint caught: `package.json`'s empty `description`/`homepage`/`repository.url`, and a **credential-class `icon` property**, which current `@n8n/community-nodes` lint rules require and which this doc's original checklist didn't anticipate — copied the same pin SVGs into `credentials/`
+- [x] Smoke-tested `npm run dev` — TypeScript compiled with 0 errors and the n8n server itself booted to the setup wizard with no node-loading errors in the log. Full node-picker visual confirmation needs a one-time local owner-account setup on the dev instance, which is a manual step (see Gotchas: local dev port). **Port gotcha found:** this machine already had a real n8n instance running in Docker on the default port 5678 — `npm run dev` silently fails to bind and exits if that's already taken; run it with `N8N_PORT=<free-port> npm run dev` instead of assuming 5678 is free
 
 ### 3. Define each resource/operation in the declarative routing config
 
@@ -216,6 +222,7 @@ Note that since May 1, 2026, verified nodes must be published through a GitHub A
 
 ## Gotchas to know upfront
 
+- **`npm run dev` silently fails if port 5678 is already taken.** It doesn't pick a fallback port — the `n8n-node dev` subprocess just logs "port 5678 is already in use" and exits 1 while the TypeScript watcher keeps running, which can look like it's still starting up. Common if you already run n8n via Docker or another instance locally. Fix: `N8N_PORT=<free-port> npm run dev` (n8n's standard env var; the CLI itself has no `--port` flag).
 - Google requires a billing account linked to the API key even to use the free tier — mention this in your README so users aren't surprised.
 - **The free tier is per SKU tier, not per API.** The March 2025 restructure replaced the flat $200 credit with per-SKU caps: **10,000** free events/month for Essentials SKUs, **5,000** for Pro, **1,000** for Enterprise. Geocoding and basic Compute Routes are Essentials. But setting `routingPreference: TRAFFIC_AWARE` / `TRAFFIC_AWARE_OPTIMAL`, or using 11+ intermediate waypoints, silently moves that request to the **Pro** SKU and its 5,000 cap. If the node exposes a traffic-aware option, the field description should say it changes the billing tier.
 - **Route Matrix is billed per element, not per request.** Elements = origins × destinations. A single 25×25 call is **625 billable events** — roughly 16 such calls exhausts the monthly free tier. This is the most expensive footgun in the node and it is invisible from the n8n UI, where it looks like one request. Put it in the field description for the origins/destinations inputs, not only the README.
