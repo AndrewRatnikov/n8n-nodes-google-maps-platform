@@ -1,6 +1,5 @@
 import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
-import { userDescription } from './resources/user';
-import { companyDescription } from './resources/company';
+import { geocodingDescription } from './resources/geocoding';
 
 export class GoogleMapsPlatform implements INodeType {
 	description: INodeTypeDescription = {
@@ -10,7 +9,8 @@ export class GoogleMapsPlatform implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Interact with the Google Maps Platform API',
+		description:
+			'Geocode addresses, compute routes and distance matrices, and look up timezones via the Google Maps Platform APIs',
 		defaults: {
 			name: 'Google Maps Platform',
 		},
@@ -31,20 +31,10 @@ export class GoogleMapsPlatform implements INodeType {
 				name: 'resource',
 				type: 'options',
 				noDataExpression: true,
-				options: [
-					{
-						name: 'User',
-						value: 'user',
-					},
-					{
-						name: 'Company',
-						value: 'company',
-					},
-				],
-				default: 'user',
+				options: [{ name: 'Geocoding', value: 'geocoding' }],
+				default: 'geocoding',
 			},
-			...userDescription,
-			...companyDescription,
+			...geocodingDescription,
 		],
 	};
 }
