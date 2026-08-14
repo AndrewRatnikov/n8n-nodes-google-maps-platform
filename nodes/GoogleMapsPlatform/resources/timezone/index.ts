@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { handleTimezoneResponse } from '../../GenericFunctions';
 import { getTimezoneFieldsDescription } from './getTimezone';
 
 const showOnlyForTimezone = {
@@ -20,6 +21,7 @@ export const timezoneDescription: INodeProperties[] = [
 				description: 'Look up the IANA timezone ID and UTC offset for a location and point in time',
 				routing: {
 					request: { method: 'GET', url: '/timezone/json' },
+					output: { postReceive: [handleTimezoneResponse] },
 				},
 			},
 		],
