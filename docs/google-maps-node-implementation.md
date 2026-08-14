@@ -147,13 +147,15 @@ Also confirmed: `n8n-node new` always creates the target as `path.resolve(cwd, n
 
 Map endpoint path, query params (Geocoding/Timezone) or POST body (Routes) to node UI fields (address, origin/destination, travel mode, units, etc.). Decide up front how the node handles Geocoding's `results[]` array: Google returns multiple matches for ambiguous addresses, so pick one item-per-result (with an optional "first result only" toggle) rather than silently dropping matches — this is the same class of decision as `ZERO_RESULTS` below and is easier to settle now than to change after release.
 
-- [ ] **Geocode** — `address` field → `qs.address`; decide multi-result handling (item-per-result vs. first-result-only toggle)
-- [ ] **Reverse Geocode** — lat/lng fields → `qs.latlng`
-- [ ] **Get Timezone** — lat/lng + timestamp fields → `qs.location` + `qs.timestamp` (document that the timestamp must be in seconds)
-- [ ] **Get Route** — origin/destination/waypoint fields → structured POST body objects; travel-mode dropdown uses Routes' SCREAMING_SNAKE_CASE enum values (`DRIVE`, `WALK`, `BICYCLE`, `TRANSIT`, `TWO_WHEELER`)
-- [ ] **Get Distance & Duration** — origins/destinations fields (arrays) → structured POST body objects; same enum casing as Get Route
-- [ ] `X-Goog-FieldMask` hard-coded per Routes operation (not exposed as a user field), always including `status` and `condition`
-- [ ] `preSend` validation added for Routes hard limits: 25 intermediate waypoints max on Get Route; 625 elements max on Get Distance & Duration (100 if `travelMode: TRANSIT` or `routingPreference: TRAFFIC_AWARE_OPTIMAL`)
+- [x] **Geocode** — `address` field → `qs.address`; multi-result handling implemented as a "Return All Matches" toggle (default off) using declarative `postReceive: [rootProperty, limit]` — full custom re-labeling isn't needed here since Geocoding results are already addressed, unlike Route Matrix
+- [x] **Reverse Geocode** — lat/lng fields → `qs.latlng` via a routing `value` expression combining two separate Latitude/Longitude fields
+- [x] **Get Timezone** — lat/lng + timestamp fields → `qs.location` + `qs.timestamp`; timestamp uses n8n's `dateTime` picker and converts to seconds via a routing `value` expression, so the seconds-vs-milliseconds gotcha is resolved in the UI rather than left as documentation
+- [x] **Get Route** — origin/destination/waypoint fields → structured POST body objects (dot-notation for `origin.address`/`destination.address`, a `value` expression mapping the repeatable Waypoints field into `{ address }` objects); travel-mode dropdown uses Routes' SCREAMING_SNAKE_CASE enum values (`DRIVE`, `WALK`, `BICYCLE`, `TRANSIT`, `TWO_WHEELER`); also added a Routing Preference field with an explicit Pro-SKU-billing note
+- [x] **Get Distance & Duration** — origins/destinations fields (repeatable strings) → arrays of `{ waypoint: { address } }` objects via `value` expressions; same enum casing as Get Route
+- [x] `X-Goog-FieldMask` hard-coded per Routes operation (not exposed as a user field). **Correction found while implementing:** `status`/`condition` are `computeRouteMatrix`-only element fields — `routes.condition` 400s on `computeRoutes` (confirmed via curl in step 1). Get Route's mask is `routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs`; Get Distance & Duration's is `originIndex,destinationIndex,status,condition,distanceMeters,duration`
+- [x] `preSend` validation added for Routes hard limits: 25 intermediate waypoints max on Get Route (`validateWaypointCount`); 625 elements max on Get Distance & Duration, 100 if `travelMode: TRANSIT` or `routingPreference: TRAFFIC_AWARE_OPTIMAL` (`validateRouteMatrixSize`) — both in `nodes/GoogleMapsPlatform/GenericFunctions.ts`, throwing `NodeOperationError` with a real message instead of letting Google's raw error through
+
+**Note:** none of this is end-to-end testable yet — the credential's `authenticate`/`test` are still the scaffold placeholders (wrong header, wrong test URL), deliberately deferred to step 5. `npm run build` and `npm run lint` both pass clean on every commit above; manual verification in the running n8n instance is still pending the credential fix.
 
 ### 4. Run it locally and build test workflows
 
