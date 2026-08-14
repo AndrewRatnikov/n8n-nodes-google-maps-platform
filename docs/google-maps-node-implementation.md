@@ -157,9 +157,9 @@ Map endpoint path, query params (Geocoding/Timezone) or POST body (Routes) to no
 
 ### 4. Run it locally and build test workflows
 
-`npm run dev` boots a local n8n at `localhost:5678` with your node already loaded.
+`npm run dev` boots a local n8n at `localhost:5678` with your node already loaded. **Note:** if you already run n8n locally via Docker (or anything else) on 5678, `npm run dev` will fail with "port already in use" rather than picking a different port — set `N8N_PORT=<free port>` in the environment before running it. First boot also requires a one-time local "Set up owner account" screen in the browser (email/name/password, all disposable/local-only) before the editor is usable.
 
-- [ ] `npm run dev` — confirm the node appears and loads without errors
+- [x] `npm run dev` — confirmed 2026-08-14: node registers, custom icon renders, credential form appears. Node picker shows 4 placeholder actions (`Get users`, `Get a user`, `Create a new user`, `Get companies`) — expected scaffold placeholders, not yet real Google Maps operations (that's step 3)
 - [ ] Test workflow: geocode a real address
 - [ ] Test workflow: reverse-geocode a real lat/lng
 - [ ] Test workflow: get a route between two real addresses, with at least one waypoint
