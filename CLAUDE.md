@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-This repository currently contains only planning docs — no code has been scaffolded yet. There is no `package.json`, no source tree, and no git repository initialized. Before writing any node code, read both docs in full:
+Scaffolded via `@n8n/node-cli` (declarative/custom template) on 2026-08-14. `package.json`, `nodes/GoogleMapsPlatform/`, and `credentials/GoogleMapsPlatformApi.credentials.ts` exist but still hold scaffold placeholders (generic `user`/`company` example resources, a generic header-based `authenticate`) — none of the actual Google Maps operations are implemented yet. Before writing node code, read both planning docs in full:
 
 - [docs/google-maps-node-plan.md](docs/google-maps-node-plan.md) — high-level plan: pitch, scope, and the architecture decision (why Routes API, not the legacy Directions/Distance Matrix APIs).
-- [docs/google-maps-node-implementation.md](docs/google-maps-node-implementation.md) — detailed implementation plan: exact endpoints, auth wiring, step-by-step build sequence with code, and every gotcha (billing tiers, field masks, enum casing, etc.). This is the single source of truth for *how* to build it.
+- [docs/google-maps-node-implementation.md](docs/google-maps-node-implementation.md) — detailed implementation plan: exact endpoints, auth wiring, step-by-step build sequence with code, and every gotcha (billing tiers, field masks, enum casing, etc.). This is the single source of truth for *how* to build it, and tracks progress with checkboxes — check items off as they're done.
 
-When the user is ready to start building, the first real step is running the n8n node CLI scaffolder (see below) — do not hand-roll a package structure that competes with it.
+For n8n's own conventions on node/credential file structure — separate from this project's specifics above — see `@AGENTS.md`.
 
 ## What this project is
 
@@ -31,15 +31,11 @@ Directions and Distance Matrix are built against the **Routes API** (`computeRou
   - Timezone → Get Timezone
 - **Known non-trivial part**: `computeRouteMatrix` responses identify rows by `originIndex`/`destinationIndex`, not by address — flattening means re-joining against the request's own origin/destination lists, not just unnesting an array. See the implementation plan's Gotchas section.
 
-## Commands (once scaffolded)
-
-These become available after running the scaffolder in step 2 of the implementation plan; they don't exist yet in this repo.
+## Commands
 
 ```bash
-# Scaffold the project (run once, from the parent directory you want the package in)
-npm create @n8n/node@latest n8n-nodes-google-maps-platform -- --template declarative/custom
-# When prompted: node type = HTTP API, base URL = https://maps.googleapis.com/maps/api, auth = API Key
-# (base URL only covers Geocoding/Timezone — Routes operations override to https://routes.googleapis.com per-operation)
+# Install dependencies (not yet run in this repo — do this before npm run dev)
+npm install
 
 # Local dev — boots n8n at localhost:5678 with the node pre-loaded
 npm run dev
@@ -47,9 +43,14 @@ npm run dev
 # Lint
 npm run lint
 
+# Build
+npm run build
+
 # Build, lint, tag, and publish to npm in one step
 npm run release
 ```
+
+The Google Maps API key for local testing lives in `.env` (gitignored) as `GOOGLE_MAPS_API_KEY` — not yet wired into the n8n dev instance's credential UI; that happens when the credential is filled in during implementation step 5.
 
 ## Distribution context
 

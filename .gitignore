@@ -22,5 +22,5 @@ yarn-error.log*
 .DS_Store
 
 # Editors
-.vscode/
+# .vscode/launch.json is tracked on purpose (n8n-node-cli scaffold's debug config)
 .idea/
