@@ -30,7 +30,20 @@ authenticate: async (credentials, requestOptions) => {
 }
 ```
 
-(Verified against `n8n-workflow@2.16.0`: `IAuthenticate = ((credentials, requestOptions) => Promise<IHttpRequestOptions>) | IAuthenticateGeneric`.) The simpler alternative — an `IAuthenticateGeneric` that sets *both* `qs.key` and the `X-Goog-Api-Key` header on every request — probably also works since each host ignores the irrelevant one, but confirm with curl before relying on it; the function form is unambiguous and costs three extra lines.
+(Verified against `n8n-workflow@2.16.0`: `IAuthenticate = ((credentials, requestOptions) => Promise<IHttpRequestOptions>) | IAuthenticateGeneric`.)
+
+**Confirmed 2026-08-14 via curl:** `routes.googleapis.com` accepts `?key=...` as a query parameter — a POST to `computeRoutes` with no `X-Goog-Api-Key` header at all, just `?key=`, returned `200`. This means the simpler alternative also works: a plain `IAuthenticateGeneric` that always sets `qs.key` on every request, with no branching function needed, since `maps.googleapis.com` already expects `?key=` and `routes.googleapis.com` turns out to accept it too.
+
+```ts
+authenticate: {
+  type: 'generic',
+  properties: {
+    qs: { key: '={{$credentials.apiKey}}' },
+  },
+}
+```
+
+Trade-off: this is less code, but it means the credential no longer models the header-based auth that Google's own Routes docs present as canonical — if Google ever tightens `routes.googleapis.com` to require the header, this breaks silently until someone notices. The function form from above costs three extra lines and matches Google's documented auth method exactly, so it doesn't rely on undocumented-but-currently-working behavior. Pick one deliberately; both are now verified to work today.
 
 ### Credential test
 
@@ -49,8 +62,8 @@ Without those rules the test passes on a dead key. Note that a passing Geocoding
 
 ### Checklist — Auth
 
-- [ ] Confirm via curl whether `routes.googleapis.com` also accepts `?key=` — decides whether `authenticate` needs to be a function or can stay a plain `IAuthenticateGeneric`
-- [ ] Implement `authenticate` as a function that branches on `requestOptions.baseURL` (query param for `maps.googleapis.com`, `X-Goog-Api-Key` header for `routes.googleapis.com`)
+- [x] Confirm via curl whether `routes.googleapis.com` also accepts `?key=` — **confirmed yes** (2026-08-14); either the branching function or a plain `IAuthenticateGeneric` with `qs.key` will work
+- [ ] Implement `authenticate` — either the branching function (matches Google's documented header auth) or the simpler generic `qs.key`-only form (less code, relies on undocumented-but-currently-working query-param support on `routes.googleapis.com`); pick one deliberately, see trade-off note above
 - [ ] Add the credential `test` block with a `responseSuccessBody` rule matching `status === 'REQUEST_DENIED'`
 - [ ] Add a second `responseSuccessBody` rule (or extend the message) for `OVER_QUERY_LIMIT`, so a quota-exhausted key doesn't read as "connection successful"
 - [ ] Add a line to the credential's description field: passing this test does not confirm Routes or Timezone are enabled — each API is billed/enabled independently
@@ -72,7 +85,7 @@ So a single `requestDefaults.baseURL` does **not** cover the node. Set `requestD
 This changes the shape of the Routes operations relative to Geocoding/Timezone:
 - **POST + JSON body**, not GET + query string (routing.request needs `method: 'POST'` and a `body` object, not `qs`)
 - Origins/destinations/waypoints are structured waypoint objects (`{ address: "..." }` or `{ location: { latLng: {...} } }`), not the legacy pipe (`|`) separated address strings
-- A response `X-Goog-FieldMask` header is required on every request or the response body comes back empty — this is easy to forget and produces a confusing "it works but returns nothing" failure mode
+- A response `X-Goog-FieldMask` header is required on every request. **Confirmed 2026-08-14 via curl:** a missing field mask on `computeRoutes` does *not* come back as an empty 200 body as earlier drafts of this doc assumed — Google returns `400 INVALID_ARGUMENT` with a message naming the missing header and giving an example value. Still easy to forget, but the failure is loud, not silent.
 - `computeRouteMatrix`'s response still needs custom flattening/labeling (see Gotchas) — the specific field names differ from the legacy `rows[].elements[]` shape, so re-verify against the current Routes API reference when implementing, don't assume the legacy field names carry over
 
 This is still achievable as a declarative node — POST bodies and static headers are normal `routing.request` config, and declarative nodes support custom `preSend`/`postReceive` functions for the body-shaping and flattening work without dropping into a fully programmatic node. Confirmed against `n8n-workflow@2.16.0`: `PostReceiveAction` includes `(this: IExecuteSingleFunctions, items: INodeExecutionData[], response: IN8nHttpFullResponse) => Promise<INodeExecutionData[]>` alongside the built-in `rootProperty`/`filter`/`sort`/`limit`/`set`/`setKeyValue` actions. Because it runs with `IExecuteSingleFunctions` bound as `this`, the flattening function can call `this.getNodeParameter(...)` — which the Route Matrix labeling work depends on (see Gotchas).
@@ -93,17 +106,19 @@ This is still achievable as a declarative node — POST bodies and static header
 
 Create a Google Cloud project, enable Geocoding, **Routes API** (covers both directions and distance matrix — the legacy Directions/Distance Matrix APIs won't even be listed as enablable on a new project), and Timezone APIs, generate an API key. Hit each endpoint directly (curl or Postman) with a couple of real addresses so you know the exact request/response shapes before you write any node code — pay particular attention to the Routes API's POST body shape, required `X-Goog-FieldMask` request header, and its response field names, since they differ from the legacy Directions/Distance Matrix APIs this plan originally targeted. While you're in curl, settle two open questions that change the node's design: **(a)** does `routes.googleapis.com` also accept `?key=` (if so, the credential can stay a plain `IAuthenticateGeneric`), and **(b)** what does a `computeRouteMatrix` response actually look like with and without `status` in the field mask.
 
-- [ ] Create or select a Google Cloud project, link a billing account
-- [ ] Enable the Geocoding API
-- [ ] Enable the Routes API
-- [ ] Enable the Time Zone API
-- [ ] Generate an API key, restrict it by API (not referrer/IP — see Gotchas)
-- [ ] `curl` the Geocoding API with a real address; save the raw response JSON somewhere for reference
-- [ ] `curl` the Timezone API with a real lat/lng + Unix timestamp in seconds; save the raw response
-- [ ] `curl` `computeRoutes` with POST, `X-Goog-Api-Key`, and `X-Goog-FieldMask` headers; save the raw response
-- [ ] `curl` `computeRouteMatrix` with a small (e.g. 2×2) origin/destination set; save the raw response
-- [ ] Confirm whether `routes.googleapis.com` accepts `?key=` in addition to the header
-- [ ] `curl` `computeRouteMatrix` once with `status` **omitted** from the field mask and once **included** — see the "everything looks OK" failure mode firsthand before writing error handling around it
+- [x] Create or select a Google Cloud project, link a billing account
+- [x] Enable the Geocoding API
+- [x] Enable the Routes API
+- [x] Enable the Time Zone API
+- [x] Generate an API key, restrict it by API (not referrer/IP — see Gotchas) — restricted to Geocoding, Routes, and Time Zone
+- [x] `curl` the Geocoding API with a real address; save the raw response JSON somewhere for reference — `200`, `status: OK`
+- [x] `curl` the Timezone API with a real lat/lng + Unix timestamp in seconds; save the raw response — `200`, `status: OK`, `Europe/Berlin`
+- [x] `curl` `computeRoutes` with POST, `X-Goog-Api-Key`, and `X-Goog-FieldMask` headers; save the raw response — `200` once the field mask used valid `computeRoutes` field paths (note: `routes.condition` is a `computeRouteMatrix`-only field and 400s on `computeRoutes`)
+- [x] `curl` `computeRouteMatrix` with a small (e.g. 2×2) origin/destination set; save the raw response — `200`, 4 elements returned out of request order, confirming the index-based re-joining requirement
+- [x] Confirm whether `routes.googleapis.com` accepts `?key=` in addition to the header — **confirmed yes**, see Auth section above
+- [x] `curl` `computeRouteMatrix` once with `status` **omitted** from the field mask and once **included** — confirmed: omitted returns only `originIndex`/`destinationIndex` with no error signal on a failed element (silent), included returns `status: { code, message }` (loud)
+
+**Validated 2026-08-14** against the live APIs with the project's actual key — all six checks above ran clean. Two things this surfaced are folded into the Auth section and the two-host bullet list above: (a) the missing-field-mask failure is a loud `400`, not a silent empty body, and (b) `routes.googleapis.com` accepts `?key=`, so the credential doesn't strictly need the branching function.
 
 ### 2. Install the official n8n node CLI and scaffold the project
 
