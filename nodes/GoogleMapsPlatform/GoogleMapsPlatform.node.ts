@@ -1,5 +1,6 @@
 import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
 import { directionsDescription } from './resources/directions';
+import { distanceMatrixDescription } from './resources/distanceMatrix';
 import { geocodingDescription } from './resources/geocoding';
 import { timezoneDescription } from './resources/timezone';
 
@@ -34,12 +35,14 @@ export class GoogleMapsPlatform implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
+					{ name: 'Distance Matrix', value: 'distanceMatrix' },
 					{ name: 'Geocoding', value: 'geocoding' },
 					{ name: 'Route', value: 'directions' },
 					{ name: 'Timezone', value: 'timezone' },
 				],
 				default: 'geocoding',
 			},
+			...distanceMatrixDescription,
 			...geocodingDescription,
 			...directionsDescription,
 			...timezoneDescription,
