@@ -63,11 +63,11 @@ Without those rules the test passes on a dead key. Note that a passing Geocoding
 ### Checklist — Auth
 
 - [x] Confirm via curl whether `routes.googleapis.com` also accepts `?key=` — **confirmed yes** (2026-08-14); either the branching function or a plain `IAuthenticateGeneric` with `qs.key` will work
-- [ ] Implement `authenticate` — either the branching function (matches Google's documented header auth) or the simpler generic `qs.key`-only form (less code, relies on undocumented-but-currently-working query-param support on `routes.googleapis.com`); pick one deliberately, see trade-off note above
-- [ ] Add the credential `test` block with a `responseSuccessBody` rule matching `status === 'REQUEST_DENIED'`
-- [ ] Add a second `responseSuccessBody` rule (or extend the message) for `OVER_QUERY_LIMIT`, so a quota-exhausted key doesn't read as "connection successful"
-- [ ] Add a line to the credential's description field: passing this test does not confirm Routes or Timezone are enabled — each API is billed/enabled independently
-- [ ] Manually verify the test fails on a key with Geocoding disabled, and passes on a valid key
+- [x] Implement `authenticate` — went with the branching function (matches Google's documented header auth for each host, rather than leaning on Routes' undocumented query-param support)
+- [x] Add the credential `test` block with a `responseSuccessBody` rule matching `status === 'REQUEST_DENIED'`
+- [x] Add a second `responseSuccessBody` rule for `OVER_QUERY_LIMIT`, so a quota-exhausted key doesn't read as "connection successful"
+- [x] Add a `notice`-type property to the credential: passing this test does not confirm Routes or Timezone are enabled — each API is billed/enabled independently
+- [ ] Manually verify the test fails on a key with Geocoding disabled, and passes on a valid key — **still open**, requires the browser UI, which needs the local n8n owner-account login only the human running this has
 
 ## The two-host problem — read this before scaffolding
 
@@ -173,13 +173,13 @@ Map endpoint path, query params (Geocoding/Timezone) or POST body (Routes) to no
 
 This is the single hardest piece of the build — see Gotchas for why index-based responses make it harder than "unnest the array." Write clear field descriptions/placeholders (this matters for n8n's UX guidelines if you submit for verification later).
 
-- [ ] `postReceive` function for `computeRouteMatrix` that re-joins `originIndex`/`destinationIndex` against the request's own origin/destination lists via `this.getNodeParameter(...)`
-- [ ] `postReceive` function for Geocoding/Timezone that inspects `status` and throws `NodeApiError` on anything other than `OK` or the deliberately-tolerated `ZERO_RESULTS`
-- [ ] `ZERO_RESULTS` handling implemented as an empty/flagged output item, not a thrown error
-- [ ] Verified (by testing, not assumption) that a `NodeApiError` thrown from inside `postReceive` still honours the node's "Continue on Fail" setting
-- [ ] Field descriptions/placeholders written for every user-facing parameter
-- [ ] Credential `test` block wired in with its `responseSuccessBody` rules (see Auth checklist)
-- [ ] Unit tests written for the response-shaping (`postReceive`) functions — not required for verification, but this is where the bugs will live, and it's cheap pure input→output logic to test
+- [x] `postReceive` function for `computeRouteMatrix` that re-joins `originIndex`/`destinationIndex` against the request's own origin/destination lists via `this.getNodeParameter(...)` — `flattenRouteMatrixResponse` in `GenericFunctions.ts`; per-element failures surface as `error`/`errorCode` on that item instead of aborting the whole matrix
+- [x] `postReceive` function for Geocoding/Timezone that inspects `status` and throws `NodeApiError` on anything other than `OK` or the deliberately-tolerated `ZERO_RESULTS` — `handleGeocodingResponse`/`handleTimezoneResponse`
+- [x] `ZERO_RESULTS` handling implemented as an empty/flagged output item, not a thrown error — returns one item with `status: 'ZERO_RESULTS'`, preserving 1:1 item correspondence for batch runs
+- [x] Verified **at the code level** (unit tests, see below) that the `continueOnFail()` branch returns a flagged item instead of throwing. **Still open:** confirming n8n's core executor actually treats that returned item the way a normal declarative HTTP failure would — needs the live UI, which needs the local owner-account login only the human running this has
+- [x] Field descriptions/placeholders written for every user-facing parameter — audited across all 5 resource files in step 3; already complete, no gaps found
+- [x] Credential `test` block wired in with its `responseSuccessBody` rules (see Auth checklist)
+- [x] Unit tests written for the response-shaping (`postReceive`) functions — 18 tests in `test/GenericFunctions.test.ts` (vitest, devDependency only, kept outside `tsconfig`'s `include` so it never ships in `dist/`)
 
 ### 6. Lint and document
 
@@ -249,30 +249,30 @@ Note that since May 1, 2026, verified nodes must be published through a GitHub A
 Consolidated from every gotcha above, grouped so you can sweep through it right before `npm run release`.
 
 ### Billing & quotas
-- [ ] Billing account linked to the API key, and the README says so
-- [ ] README explains the free tier is per-SKU (10k Essentials / 5k Pro / 1k Enterprise), not per-API
-- [ ] Field description on any traffic-aware option notes it moves the request to the Pro SKU
-- [ ] Field description on origins/destinations notes Route Matrix bills per element (origins × destinations)
-- [ ] `preSend` validation enforces 25 intermediate waypoints (Get Route) and 625/100 elements (Get Distance & Duration) with a clear error, not a raw 400
+- [ ] Billing account linked to the API key, and the README says so — step 6
+- [ ] README explains the free tier is per-SKU (10k Essentials / 5k Pro / 1k Enterprise), not per-API — step 6
+- [x] Field description on any traffic-aware option notes it moves the request to the Pro SKU — Routing Preference field, Get Route + Get Distance & Duration
+- [x] Field description on origins/destinations notes Route Matrix bills per element (origins × destinations) — Destinations field
+- [x] `preSend` validation enforces 25 intermediate waypoints (Get Route) and 625/100 elements (Get Distance & Duration) with a clear error, not a raw 400
 
 ### Error handling
-- [ ] Geocoding/Timezone `postReceive` inspects `status` and throws `NodeApiError` on non-OK, non-`ZERO_RESULTS` values
-- [ ] Routes field mask hard-codes `status` and `condition` — not exposed as an editable field
-- [ ] `ZERO_RESULTS` returns an empty/flagged item and respects `continueOnFail()` instead of throwing
-- [ ] Confirmed by testing that a `NodeApiError` thrown inside `postReceive` still honours "Continue on Fail"
+- [x] Geocoding/Timezone `postReceive` inspects `status` and throws `NodeApiError` on non-OK, non-`ZERO_RESULTS` values
+- [x] Routes field mask hard-codes `status` and `condition` — not exposed as an editable field (note: `condition` is Route-Matrix-only, `computeRoutes` doesn't have it — see the two-host section correction above)
+- [x] `ZERO_RESULTS` returns an empty/flagged item and respects `continueOnFail()` instead of throwing
+- [x] Confirmed **at the code level** (unit tests) that a `NodeApiError` thrown inside `postReceive` respects `continueOnFail()`. Confirming n8n's core executor treats the resulting item correctly end-to-end is still a manual/live check, not done here.
 
 ### Auth & security
-- [ ] Credential `authenticate` function branches by host (query param for `maps.googleapis.com`, header for `routes.googleapis.com`)
-- [ ] Credential `test` block uses `responseSuccessBody` rules, not just HTTP status
-- [ ] README documents plaintext key exposure in execution logs / debug panel
-- [ ] README tells users to restrict the key by API, not by referrer/IP
+- [x] Credential `authenticate` function branches by host (query param for `maps.googleapis.com`, header for `routes.googleapis.com`)
+- [x] Credential `test` block uses `responseSuccessBody` rules, not just HTTP status
+- [ ] README documents plaintext key exposure in execution logs / debug panel — step 6
+- [ ] README tells users to restrict the key by API, not by referrer/IP — step 6
 
 ### Data correctness
-- [ ] Route Matrix `postReceive` re-labels elements by address/name, not raw `originIndex`/`destinationIndex`
-- [ ] Timezone timestamp field documented and implemented as seconds, not milliseconds
-- [ ] Routes enums are SCREAMING_SNAKE_CASE; Geocoding/Timezone enums are lowercase — verified per operation against the live API, not assumed
-- [ ] Waypoint limit enforced as 25 *intermediate* (not the legacy "25 total including origin/destination")
-- [ ] Geocoding multi-result (`results[]`) behavior decided and implemented, not left as an accident of `rootProperty`
+- [x] Route Matrix `postReceive` re-labels elements by address/name, not raw `originIndex`/`destinationIndex`
+- [x] Timezone timestamp field documented and implemented as seconds, not milliseconds
+- [x] Routes enums are SCREAMING_SNAKE_CASE; Geocoding/Timezone enums are lowercase — verified per operation against the live API, not assumed
+- [x] Waypoint limit enforced as 25 *intermediate* (not the legacy "25 total including origin/destination")
+- [x] Geocoding multi-result (`results[]`) behavior decided and implemented — "Return All Matches" toggle, first-match by default, not left as an accident of `rootProperty`
 
 ### Verification readiness
 - [ ] Zero runtime dependencies (no polyline-decoding library — inline any such helper)
