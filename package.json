@@ -4,8 +4,13 @@
   "description": "n8n community node for Google Maps Platform: Geocoding, Distance Matrix, Directions, and Timezone lookups.",
   "license": "MIT",
   "homepage": "https://github.com/AndrewRatnikov/n8n-nodes-google-maps-platform#readme",
-  "keywords": ["n8n-community-node-package"],
-  "author": { "name": "Andrew", "email": "ratnikov.am@gmail.com" },
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "author": {
+    "name": "Andrew",
+    "email": "ratnikov.am@gmail.com"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AndrewRatnikov/n8n-nodes-google-maps-platform.git"
@@ -16,22 +21,32 @@
     "dev": "n8n-node dev",
     "lint": "n8n-node lint",
     "lint:fix": "n8n-node lint --fix",
+    "test": "vitest run",
     "release": "n8n-node release",
     "prepublishOnly": "n8n-node prerelease"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "n8n": {
     "n8nNodesApiVersion": 1,
     "strict": true,
-    "credentials": ["dist/credentials/GoogleMapsPlatformApi.credentials.js"],
-    "nodes": ["dist/nodes/GoogleMapsPlatform/GoogleMapsPlatform.node.js"]
+    "credentials": [
+      "dist/credentials/GoogleMapsPlatformApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/GoogleMapsPlatform/GoogleMapsPlatform.node.js"
+    ]
   },
   "devDependencies": {
     "@n8n/node-cli": "*",
     "eslint": "9.32.0",
     "prettier": "3.6.2",
     "release-it": "^19.0.4",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^4.1.10"
   },
-  "peerDependencies": { "n8n-workflow": "*" }
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
 }
