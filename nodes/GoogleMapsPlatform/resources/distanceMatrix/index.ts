@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { flattenRouteMatrixResponse } from '../../GenericFunctions';
 import { getDistanceDurationFieldsDescription } from './getDistanceDuration';
 
 const showOnlyForDistanceMatrix = {
@@ -29,6 +30,7 @@ export const distanceMatrixDescription: INodeProperties[] = [
 								'originIndex,destinationIndex,status,condition,distanceMeters,duration',
 						},
 					},
+					output: { postReceive: [flattenRouteMatrixResponse] },
 				},
 			},
 		],

@@ -119,3 +119,46 @@ export async function handleTimezoneResponse(
 
 	return [{ json: body, pairedItem }];
 }
+
+// computeRouteMatrix's response identifies each row by originIndex/
+// destinationIndex, not by address -- Google never echoes the origin/
+// destination strings back. Flattening therefore means re-joining each
+// element against the request's own origin/destination lists, not just
+// unnesting an array.
+//
+// Per-element failures are surfaced as an `error`/`errorCode` field on that
+// item rather than thrown: one bad address in a 10x10 matrix shouldn't abort
+// the other 99 results. A fully-failed request (bad key, disabled API) never
+// reaches this function -- the Routes API uses real HTTP status codes, so
+// n8n's declarative routing throws before postReceive runs.
+export async function flattenRouteMatrixResponse(
+	this: IExecuteSingleFunctions,
+	items: INodeExecutionData[],
+	response: IN8nHttpFullResponse,
+): Promise<INodeExecutionData[]> {
+	const elements = (response.body as IDataObject[]) ?? [];
+	const origins = this.getNodeParameter('origins', []) as string[];
+	const destinations = this.getNodeParameter('destinations', []) as string[];
+	const pairedItem = items[0]?.pairedItem;
+
+	return elements.map((element) => {
+		const originIndex = (element.originIndex as number | undefined) ?? 0;
+		const destinationIndex = (element.destinationIndex as number | undefined) ?? 0;
+		const status = element.status as IDataObject | undefined;
+		const hasError = status !== undefined && Object.keys(status).length > 0;
+
+		return {
+			json: {
+				origin: origins[originIndex] ?? null,
+				destination: destinations[destinationIndex] ?? null,
+				condition: element.condition,
+				distanceMeters: element.distanceMeters,
+				duration: element.duration,
+				...(hasError
+					? { error: (status?.message as string | undefined) ?? 'Unknown error', errorCode: status?.code }
+					: {}),
+			},
+			pairedItem,
+		};
+	});
+}
