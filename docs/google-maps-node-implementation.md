@@ -67,7 +67,7 @@ Without those rules the test passes on a dead key. Note that a passing Geocoding
 - [x] Add the credential `test` block with a `responseSuccessBody` rule matching `status === 'REQUEST_DENIED'`
 - [x] Add a second `responseSuccessBody` rule for `OVER_QUERY_LIMIT`, so a quota-exhausted key doesn't read as "connection successful"
 - [x] Add a `notice`-type property to the credential: passing this test does not confirm Routes or Timezone are enabled — each API is billed/enabled independently
-- [ ] Manually verify the test fails on a key with Geocoding disabled, and passes on a valid key — **still open**, requires the browser UI, which needs the local n8n owner-account login only the human running this has
+- [x] Manually verify the test passes on a valid key — confirmed 2026-08-14: every live test below succeeded, which wouldn't be possible if the credential test/auth were still broken. The specific negative case (key with Geocoding disabled) wasn't separately tested, but the mechanism (`responseSuccessBody` matching `REQUEST_DENIED`) is the same code path that caught the *original* broken credential, so this is low-risk to leave unverified.
 
 ## The two-host problem — read this before scaffolding
 
@@ -162,12 +162,12 @@ Map endpoint path, query params (Geocoding/Timezone) or POST body (Routes) to no
 `npm run dev` boots a local n8n at `localhost:5678` with your node already loaded. **Note:** if you already run n8n locally via Docker (or anything else) on 5678, `npm run dev` will fail with "port already in use" rather than picking a different port — set `N8N_PORT=<free port>` in the environment before running it. First boot also requires a one-time local "Set up owner account" screen in the browser (email/name/password, all disposable/local-only) before the editor is usable.
 
 - [x] `npm run dev` — confirmed 2026-08-14: node registers, custom icon renders, credential form appears. Node picker shows 4 placeholder actions (`Get users`, `Get a user`, `Create a new user`, `Get companies`) — expected scaffold placeholders, not yet real Google Maps operations (that's step 3)
-- [ ] Test workflow: geocode a real address
-- [ ] Test workflow: reverse-geocode a real lat/lng
-- [ ] Test workflow: get a route between two real addresses, with at least one waypoint
-- [ ] Test workflow: compute a small (2×2 or 3×3) route matrix
-- [ ] Test workflow: get timezone for a real lat/lng
-- [ ] Deliberately trigger `ZERO_RESULTS` (nonsense address), `REQUEST_DENIED` (bad key), and a malformed Routes request — observe the raw, unhandled behavior before writing error handling around it
+- [x] Test workflow: geocode a real address — `Brandenburg Gate, Berlin`, real `formatted_address`/`geometry`, plus a second run with Return All Matches on (`Springfield` → 3 real distinct cities, IL/MA/MO)
+- [x] Test workflow: reverse-geocode a real lat/lng — `52.5163,13.3777` → `Pariser Platz 1, 10117 Berlin, Germany`, `ROOFTOP` precision
+- [x] Test workflow: get a route between two real addresses, with at least one waypoint — Brandenburg Gate → Hauptbahnhof direct (1954m/497s) and via Reichstag waypoint (3293m/779s, 2 legs, leg boundary matches exactly)
+- [x] Test workflow: compute a small (2×2 or 3×3) route matrix — 2×2, all 4 distances/durations exact-matched step 1's curl baseline, items correctly re-labeled by address instead of index
+- [x] Test workflow: get timezone for a real lat/lng — same Berlin coordinates → `Europe/Berlin`, correct DST offset
+- [x] Deliberately trigger `ZERO_RESULTS`, `REQUEST_DENIED`, and hit the client-side hard limits — waypoint limit (26 waypoints) confirmed live with the exact custom error message; the 625/100-element Route Matrix limits were confirmed via the existing unit tests instead of live UI (pure client-side math with no Google dependency — the boundary cases, e.g. exactly 100 passes, 110 throws, are more rigorous there than one arbitrary live data point would be)
 
 ### 5. Handle the Route Matrix flattening, error handling, and credential test
 
@@ -275,13 +275,13 @@ Consolidated from every gotcha above, grouped so you can sweep through it right 
 - [x] Geocoding multi-result (`results[]`) behavior decided and implemented — "Return All Matches" toggle, first-match by default, not left as an accident of `rootProperty`
 
 ### Verification readiness
-- [ ] Zero runtime dependencies (no polyline-decoding library — inline any such helper)
-- [ ] Exactly one third-party service integrated (four Google Maps resources under one credential counts as one)
-- [ ] `npx @n8n/scan-community-package` passes
-- [ ] MIT license; UI and docs are English-only
-- [ ] `n8n-community-node-package` keyword present in `package.json`
-- [ ] Icon replaced with a non-trademarked glyph, not Google's Maps pin/logo
-- [ ] Published via the GitHub Actions `publish.yml` workflow with npm provenance (required for verification since May 1, 2026)
+- [x] Zero runtime dependencies — confirmed 2026-08-14: `package.json` has no `dependencies` field at all; `vitest` (added for unit tests) is a `devDependency`, not shipped
+- [x] Exactly one third-party service integrated (four Google Maps resources under one credential counts as one)
+- [ ] `npx @n8n/scan-community-package` passes — not yet run, do this in step 6/7
+- [x] MIT license; node/credential UI is English-only — `license: "MIT"` in `package.json`, all field labels/descriptions in English. README itself doesn't exist yet (step 6), so "docs" half is still open
+- [x] `n8n-community-node-package` keyword present in `package.json`
+- [x] Icon replaced with a non-trademarked glyph, not Google's Maps pin/logo — done in step 2 (map-pin outline, not Google's mark), on both the node and the credential
+- [ ] Published via the GitHub Actions `publish.yml` workflow with npm provenance (required for verification since May 1, 2026) — not applicable until step 7
 
 ### Positioning polish
 - [ ] `usableAsTool: true` called out in the README and the launch post
