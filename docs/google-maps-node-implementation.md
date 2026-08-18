@@ -196,11 +196,24 @@ This is the single hardest piece of the build — see Gotchas for why index-base
 
 ### 7. Publish
 
-`npm login`, then `npm run release` — this builds, lints, tags, and publishes to npm in one step. Even though provenance is only required for *verification*, publishing via the scaffolded `publish.yml` from the start costs nothing and saves re-doing the release pipeline later.
+**Correction (2026-08-18), confirmed the hard way across three failed CI runs:** `npm run release` run locally does **not** publish to npm by default. Per `n8n-node release --help`: locally it only runs release-it (bump version, changelog, commit, tag, push, GitHub release) — actual publishing is meant to happen in CI, triggered by the tag push, with `NPM_CONFIG_PROVENANCE=true` set automatically when `GITHUB_ACTIONS` is detected. `npm login` doesn't come into it for the normal path at all.
+
+That CI-publish path has a real, documented gap for a **brand-new package's first-ever release**: npm's Trusted Publishing (OIDC, no `NPM_TOKEN` secret — the scaffold's default `publish.yml` setup) cannot create a package that doesn't exist yet. You configure a trusted publisher *on* an existing package's settings page; there's no package to attach it to before the first publish. The failure sequence, in order:
+
+1. First CI run: `npm error Can't generate provenance for new or private package, you must set access to public.` — fixed by adding `"publishConfig": { "access": "public" }` to `package.json`.
+2. Second CI run, same tag mechanics but next version: `npm error 404 Not Found - PUT .../n8n-nodes-google-maps-platform` — this is the OIDC first-publish limitation itself. No config fixes this; CI cannot make the first publish of a new package via Trusted Publishing.
+3. Attempted workaround, plain `npm publish` locally: blocked by the scaffold's own `prepublishOnly: n8n-node prerelease` guard, which refuses and tells you to run `npm run release` instead — this guard exists specifically to stop people from bypassing the lint/build/version pipeline.
+4. Re-ran `npm run release` locally to retry: `ERROR There are no commits since the latest tag.` — release-it correctly refuses to redo a release when nothing changed; the prior tag's commit, version bump, and code were all fine, only the registry write had failed. Forcing a new empty version bump just to appease this would waste another version number for no reason.
+
+**The actual fix:** `n8n-node release --publish` — an explicit, documented flag for exactly this situation ("Publish to npm from your local machine (not recommended). Packages published this way will not include npm provenance and cannot become verified community nodes."). Run as `npm run release -- --publish` (the `--` is required to pass the flag through the npm script) from an already-`npm login`'d shell. This bootstrap publish has no provenance, which is fine — provenance is only required for the verified badge (step 10), not for shipping v1.
+
+**After this bootstrap publish succeeds**, go configure Trusted Publishing on the now-existing package's npmjs.com settings page (repo + `publish.yml` workflow name), so every release *after* this one publishes normally through CI with provenance, the way the scaffold originally intended.
 
 - [ ] `npm login`
-- [ ] `npm run release`
+- [ ] `npm run release` (no `--publish`) to cut the tagged release — expect to burn 1-2 version numbers on this if you hit the same CI failures; that's fine, nothing was ever actually published under them
+- [ ] `npm run release -- --publish` to actually publish locally once CI-based publishing fails on a first release
 - [ ] Confirm the package is live on npm and installs cleanly in a fresh n8n instance
+- [ ] Configure Trusted Publishing on npmjs.com now that the package exists, so future releases go through CI with provenance
 - [ ] Run `npx @n8n/scan-community-package n8n-nodes-google-maps-platform` against the now-published package — this is the earliest point it can actually run (see Pre-launch checklist note); if it fails, fix and publish a patch version rather than expecting a local fix
 
 ### 8. Install your own package and build a demo workflow
