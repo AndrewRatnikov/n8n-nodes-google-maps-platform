@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-google-maps-platform",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "n8n community node for Google Maps Platform: Geocoding, Distance Matrix, Directions, and Timezone lookups.",
   "license": "MIT",
   "publishConfig": {
