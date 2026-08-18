@@ -209,12 +209,14 @@ That CI-publish path has a real, documented gap for a **brand-new package's firs
 
 **After this bootstrap publish succeeds**, go configure Trusted Publishing on the now-existing package's npmjs.com settings page (repo + `publish.yml` workflow name), so every release *after* this one publishes normally through CI with provenance, the way the scaffold originally intended.
 
-- [ ] `npm login`
-- [ ] `npm run release` (no `--publish`) to cut the tagged release — expect to burn 1-2 version numbers on this if you hit the same CI failures; that's fine, nothing was ever actually published under them
-- [ ] `npm run release -- --publish` to actually publish locally once CI-based publishing fails on a first release
-- [ ] Confirm the package is live on npm and installs cleanly in a fresh n8n instance
-- [ ] Configure Trusted Publishing on npmjs.com now that the package exists, so future releases go through CI with provenance
-- [ ] Run `npx @n8n/scan-community-package n8n-nodes-google-maps-platform` against the now-published package — this is the earliest point it can actually run (see Pre-launch checklist note); if it fails, fix and publish a patch version rather than expecting a local fix
+**One more gotcha found while verifying the publish:** this machine's npm is wrapped by a local security tool ("Safe-chain") that silently suppresses packages/versions published within some minimum age window — `npm view`, `npm install`, and `npx @n8n/scan-community-package` all appeared to fail (empty output, `ENOVERSIONS`, `@undefined` version) against our own package minutes after publishing, purely because it was "too new," not because anything was actually wrong. Fix: add `--safe-chain-skip-minimum-package-age` to the command. Worth knowing so a fresh publish doesn't look broken when it isn't.
+
+- [x] `npm login` — confirmed via `npm whoami` (`andrii.ratnikov`)
+- [x] `npm run release` (no `--publish`) to cut the tagged release — burned two version numbers (`0.1.1`, `0.1.2`) on the provenance/OIDC failures above; harmless, since nothing was ever actually published under either
+- [x] `npm run release -- --publish` — published `0.1.3` successfully. Note: this still pushes a tag same as the non-`--publish` path, which also re-triggers the CI workflow — that CI run then fails with `You cannot publish over the previously published versions` since the local publish already succeeded. That failure is expected noise, not a new problem; ignore it once you've confirmed the version is actually live.
+- [x] Confirm the package is live on npm and installs cleanly in a fresh n8n instance — confirmed 2026-08-18 directly against `registry.npmjs.org` (bypassing the local Safe-chain suppression) and via a real `npm install` into a scratch directory: correct `dist/` files, correct `n8n.nodes`/`n8n.credentials` manifest paths
+- [ ] Configure Trusted Publishing on npmjs.com now that the package exists, so future releases go through CI with provenance — **still open**, this is an npmjs.com account-settings action, not something doable from a terminal
+- [x] Run `npx @n8n/scan-community-package n8n-nodes-google-maps-platform@0.1.3 --safe-chain-skip-minimum-package-age` — passed the malware/metadata checks; failed only on "not published with provenance," which is the expected, already-known consequence of the local `--publish` bootstrap (see Auth/Verification-readiness notes) and doesn't block v1 usage, only the future verified-badge submission
 
 ### 8. Install your own package and build a demo workflow
 
@@ -292,11 +294,11 @@ Consolidated from every gotcha above, grouped so you can sweep through it right 
 ### Verification readiness
 - [x] Zero runtime dependencies — confirmed 2026-08-14: `package.json` has no `dependencies` field at all; `vitest` (added for unit tests) is a `devDependency`, not shipped
 - [x] Exactly one third-party service integrated (four Google Maps resources under one credential counts as one)
-- [ ] `npx @n8n/scan-community-package` passes — **can't run yet**: confirmed 2026-08-14 it only scans already-published packages (fetches by name from the npm registry, no local mode). Move this to right after `npm run release` in step 7, not before.
-- [x] MIT license; node/credential UI is English-only — `license: "MIT"` in `package.json`, all field labels/descriptions in English. README itself doesn't exist yet (step 6), so "docs" half is still open
+- [x] `npx @n8n/scan-community-package` passes malware/metadata checks — run 2026-08-18 against the published `0.1.3`; the only failure is "not published with provenance," expected since the bootstrap publish used `--publish` (local, no provenance) — re-run this after the first Trusted-Publishing CI release to get a fully clean pass
+- [x] MIT license; node/credential UI and README are English-only
 - [x] `n8n-community-node-package` keyword present in `package.json`
 - [x] Icon replaced with a non-trademarked glyph, not Google's Maps pin/logo — done in step 2 (map-pin outline, not Google's mark), on both the node and the credential
-- [ ] Published via the GitHub Actions `publish.yml` workflow with npm provenance (required for verification since May 1, 2026) — not applicable until step 7
+- [ ] Published via the GitHub Actions `publish.yml` workflow with npm provenance (required for verification since May 1, 2026) — **still open**: `0.1.3` was published locally without provenance (see step 7's OIDC first-publish saga); needs Trusted Publishing configured on npmjs.com, then a real CI-driven release, before this is satisfied
 
 ### Positioning polish
 - [x] `usableAsTool: true` called out in the README — the launch-post half is still open, that's step 9
