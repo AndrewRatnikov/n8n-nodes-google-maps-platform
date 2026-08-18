@@ -221,7 +221,7 @@ That CI-publish path has a real, documented gap for a **brand-new package's firs
 ### 8. Install your own package and build a demo workflow
 
 - [x] Install via Settings → Community Nodes in n8n — confirmed 2026-08-18 on a separate, fresh n8n instance (not the dev sandbox): package installs from npm, node appears in the picker with the custom icon and the standard community-node badge
-- [ ] Build one real demo workflow as a case study — the "standardize + geocode property addresses, calculate distance to key amenities" angle ties directly to your proptech positioning
+- [x] Build one real demo workflow as a case study — confirmed 2026-08-18 on the same fresh instance running the actual published `0.1.3` package (not dev source): Trigger → Edit Fields → Geocode → Get Distance & Duration, results exact-matched the README's numbers to the second (2275m/772s, 3230m/996s), an independent end-to-end confirmation of the whole pipeline for a real user
 
 ### 9. Distribute where the demand already is
 
