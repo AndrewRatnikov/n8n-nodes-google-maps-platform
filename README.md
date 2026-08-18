@@ -47,7 +47,13 @@ Standardize and geocode property addresses, then compute distance to key ameniti
 2. **Distance Matrix → Get Distance & Duration** with those coordinates as origins and your amenities (transit, schools, grocery stores) as destinations, to get travel distance/time to each.
 3. Feed the result into whatever scores or filters listings by proximity.
 
-*(A screenshot of this workflow will be added once it's built out as a real demo — see the [implementation plan](docs/google-maps-node-implementation.md)'s step 8.)*
+Geocoding `20 W 34th St, New York, NY` returns a standardized, ROOFTOP-precision address and coordinates:
+
+![Geocode node showing a real API response with formatted address and coordinates](docs/images/example-workflow-geocode.png)
+
+That result feeds directly into Distance Matrix as the origin, computing real distance and duration to two destinations in one call — note the output is labeled by address, not by the raw index Google's API actually returns:
+
+![Distance Matrix node showing real distances and durations to two destinations, labeled by address](docs/images/example-workflow-distance-matrix.png)
 
 ## Billing — read this before running large batches
 

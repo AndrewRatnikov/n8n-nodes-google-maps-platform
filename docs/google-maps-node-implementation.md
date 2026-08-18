@@ -192,7 +192,7 @@ This is the single hardest piece of the build — see Gotchas for why index-base
 - [x] README: per-element Route Matrix billing explanation (origins × destinations)
 - [x] README: API key plaintext-in-logs / debug-panel caveat
 - [x] README: "restrict your key by API, not by referrer/IP"
-- [ ] README: one example workflow screenshot — **still open**: wrote a text-only example use case (proptech geocode-then-distance-matrix) instead; an actual screenshot needs a real demo workflow built and run in the live UI, which is step 8's job and needs the local owner-account login only the human running this has
+- [x] README: two example workflow screenshots — real Geocode and Get Distance & Duration node executions (`20 W 34th St, New York, NY` → Grand Central Terminal / Central Park), both showing actual Google responses, not mocked data. Built and run collaboratively: the browser session/login stayed with the human throughout (I never had credentials), I drove node configuration and execution via the Browser tool, and the human captured/saved the final screenshots since pasted images in this session don't land on disk anywhere I can reach programmatically -- confirmed by checking the obvious cache locations (browser bridge temp dir, `~/Library/Caches`, `Claude/pending-uploads`) before asking
 
 ### 7. Publish
 
