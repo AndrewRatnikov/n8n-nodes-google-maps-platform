@@ -185,14 +185,14 @@ This is the single hardest piece of the build — see Gotchas for why index-base
 
 `npm run lint`, fix issues, write a README with install steps, a credential setup guide (link to Google Cloud Console), and one example workflow screenshot.
 
-- [ ] `npm run lint` passes with no errors
-- [ ] README: install steps
-- [ ] README: credential setup guide, linking to Google Cloud Console
-- [ ] README: billing-account requirement (needed even for free-tier usage)
-- [ ] README: per-element Route Matrix billing explanation (origins × destinations)
-- [ ] README: API key plaintext-in-logs / debug-panel caveat
-- [ ] README: "restrict your key by API, not by referrer/IP"
-- [ ] README: one example workflow screenshot
+- [x] `npm run lint` passes with no errors
+- [x] README: install steps
+- [x] README: credential setup guide, linking to Google Cloud Console
+- [x] README: billing-account requirement (needed even for free-tier usage)
+- [x] README: per-element Route Matrix billing explanation (origins × destinations)
+- [x] README: API key plaintext-in-logs / debug-panel caveat
+- [x] README: "restrict your key by API, not by referrer/IP"
+- [ ] README: one example workflow screenshot — **still open**: wrote a text-only example use case (proptech geocode-then-distance-matrix) instead; an actual screenshot needs a real demo workflow built and run in the live UI, which is step 8's job and needs the local owner-account login only the human running this has
 
 ### 7. Publish
 
@@ -251,8 +251,8 @@ Note that since May 1, 2026, verified nodes must be published through a GitHub A
 Consolidated from every gotcha above, grouped so you can sweep through it right before `npm run release`.
 
 ### Billing & quotas
-- [ ] Billing account linked to the API key, and the README says so — step 6
-- [ ] README explains the free tier is per-SKU (10k Essentials / 5k Pro / 1k Enterprise), not per-API — step 6
+- [x] Billing account linked to the API key, and the README says so
+- [x] README explains the free tier is per-SKU (10k Essentials / 5k Pro / 1k Enterprise), not per-API
 - [x] Field description on any traffic-aware option notes it moves the request to the Pro SKU — Routing Preference field, Get Route + Get Distance & Duration
 - [x] Field description on origins/destinations notes Route Matrix bills per element (origins × destinations) — Destinations field
 - [x] `preSend` validation enforces 25 intermediate waypoints (Get Route) and 625/100 elements (Get Distance & Duration) with a clear error, not a raw 400
@@ -266,8 +266,8 @@ Consolidated from every gotcha above, grouped so you can sweep through it right 
 ### Auth & security
 - [x] Credential `authenticate` function branches by host (query param for `maps.googleapis.com`, header for `routes.googleapis.com`)
 - [x] Credential `test` block uses `responseSuccessBody` rules, not just HTTP status
-- [ ] README documents plaintext key exposure in execution logs / debug panel — step 6
-- [ ] README tells users to restrict the key by API, not by referrer/IP — step 6
+- [x] README documents plaintext key exposure in execution logs / debug panel
+- [x] README tells users to restrict the key by API, not by referrer/IP
 
 ### Data correctness
 - [x] Route Matrix `postReceive` re-labels elements by address/name, not raw `originIndex`/`destinationIndex`
@@ -286,4 +286,4 @@ Consolidated from every gotcha above, grouped so you can sweep through it right 
 - [ ] Published via the GitHub Actions `publish.yml` workflow with npm provenance (required for verification since May 1, 2026) — not applicable until step 7
 
 ### Positioning polish
-- [ ] `usableAsTool: true` called out in the README and the launch post
+- [x] `usableAsTool: true` called out in the README — the launch-post half is still open, that's step 9
