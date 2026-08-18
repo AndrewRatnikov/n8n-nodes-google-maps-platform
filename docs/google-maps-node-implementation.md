@@ -220,7 +220,7 @@ That CI-publish path has a real, documented gap for a **brand-new package's firs
 
 ### 8. Install your own package and build a demo workflow
 
-- [ ] Install via Settings → Community Nodes in n8n
+- [x] Install via Settings → Community Nodes in n8n — confirmed 2026-08-18 on a separate, fresh n8n instance (not the dev sandbox): package installs from npm, node appears in the picker with the custom icon and the standard community-node badge
 - [ ] Build one real demo workflow as a case study — the "standardize + geocode property addresses, calculate distance to key amenities" angle ties directly to your proptech positioning
 
 ### 9. Distribute where the demand already is
