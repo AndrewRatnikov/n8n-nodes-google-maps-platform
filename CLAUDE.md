@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-Scaffolded via `@n8n/node-cli` (declarative/custom template) on 2026-08-14. `package.json`, `nodes/GoogleMapsPlatform/`, and `credentials/GoogleMapsPlatformApi.credentials.ts` exist but still hold scaffold placeholders (generic `user`/`company` example resources, a generic header-based `authenticate`) — none of the actual Google Maps operations are implemented yet. Before writing node code, read both planning docs in full:
+Scaffolded via `@n8n/node-cli` (declarative/custom template) on 2026-08-14. All four resources (Geocoding, Distance Matrix, Directions, Timezone) are implemented and shipping — `0.1.3` is live on npm. Before making further changes, read the planning docs in full:
 
 - [docs/google-maps-node-plan.md](docs/google-maps-node-plan.md) — high-level plan: pitch, scope, and the architecture decision (why Routes API, not the legacy Directions/Distance Matrix APIs).
 - [docs/google-maps-node-implementation.md](docs/google-maps-node-implementation.md) — detailed implementation plan: exact endpoints, auth wiring, step-by-step build sequence with code, and every gotcha (billing tiers, field masks, enum casing, etc.). This is the single source of truth for *how* to build it, and tracks progress with checkboxes — check items off as they're done.
@@ -35,7 +35,7 @@ Directions and Distance Matrix are built against the **Routes API** (`computeRou
 ## Commands
 
 ```bash
-# Install dependencies (not yet run in this repo — do this before npm run dev)
+# Install dependencies
 npm install
 
 # Local dev — boots n8n at localhost:5678 with the node pre-loaded
@@ -51,7 +51,7 @@ npm run build
 npm run release
 ```
 
-The Google Maps API key for local testing lives in `.env` (gitignored) as `GOOGLE_MAPS_API_KEY` — not yet wired into the n8n dev instance's credential UI; that happens when the credential is filled in during implementation step 5.
+The Google Maps API key for local testing lives in `.env` (gitignored) as `GOOGLE_MAPS_API_KEY` — paste it into the "Google Maps Platform API" credential in the n8n dev instance's UI to test live.
 
 ## Distribution context
 

@@ -73,7 +73,8 @@ See [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md) for the project's architec
 
 ```bash
 npm install       # install dependencies
-npm run dev       # boots a local n8n at localhost:5679 with this node loaded
+npm run dev       # boots a local n8n at localhost:5678 with this node loaded
+                  # (already running n8n elsewhere on 5678? set N8N_PORT=<free port> first)
 npm run build     # compile TypeScript
 npm run lint      # eslint-plugin-n8n-nodes-base rules
 npm test          # vitest unit tests for the response-shaping logic
