@@ -6,7 +6,7 @@
 	"resources": {
 		"credentialDocumentation": [
 			{
-				"url": "https://github.com/AndrewRatnikov/n8n-nodes-google-maps-platform#credentials"
+				"url": "https://github.com/AndrewRatnikov/n8n-nodes-google-maps-platform#credential-setup"
 			}
 		],
 		"primaryDocumentation": [

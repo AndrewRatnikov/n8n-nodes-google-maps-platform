@@ -13,7 +13,8 @@ export class GoogleMapsPlatformApi implements ICredentialType {
 
 	icon = { light: 'file:googleMapsPlatform.svg', dark: 'file:googleMapsPlatform.dark.svg' } as const;
 
-	documentationUrl = 'https://github.com/AndrewRatnikov/n8n-nodes-google-maps-platform#credentials';
+	documentationUrl =
+		'https://github.com/AndrewRatnikov/n8n-nodes-google-maps-platform#credential-setup';
 
 	properties: INodeProperties[] = [
 		{
