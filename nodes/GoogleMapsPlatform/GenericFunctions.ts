@@ -131,6 +131,97 @@ export async function validateRouteMatrixSize(
 	return requestOptions;
 }
 
+function applyAdditionalQueryParams(
+	requestOptions: IHttpRequestOptions,
+	additionalFields: IDataObject,
+	keys: string[],
+): IHttpRequestOptions {
+	const qs = (requestOptions.qs as IDataObject | undefined) ?? {};
+
+	for (const key of keys) {
+		const value = additionalFields[key];
+		if (value !== undefined && value !== '') qs[key] = value;
+	}
+
+	requestOptions.qs = qs;
+	return requestOptions;
+}
+
+export async function setGeocodeAdditionalFields(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const additionalFields = this.getNodeParameter('additionalFields', {}) as IDataObject;
+	return applyAdditionalQueryParams(requestOptions, additionalFields, [
+		'language',
+		'region',
+		'components',
+	]);
+}
+
+export async function setReverseGeocodeAdditionalFields(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const additionalFields = this.getNodeParameter('additionalFields', {}) as IDataObject;
+	return applyAdditionalQueryParams(requestOptions, additionalFields, ['language']);
+}
+
+export async function setTimezoneAdditionalFields(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const additionalFields = this.getNodeParameter('additionalFields', {}) as IDataObject;
+	return applyAdditionalQueryParams(requestOptions, additionalFields, ['language']);
+}
+
+function buildRouteModifiers(additionalFields: IDataObject): IDataObject {
+	const routeModifiers: IDataObject = {};
+	if (additionalFields.avoidTolls) routeModifiers.avoidTolls = true;
+	if (additionalFields.avoidHighways) routeModifiers.avoidHighways = true;
+	if (additionalFields.avoidFerries) routeModifiers.avoidFerries = true;
+	return routeModifiers;
+}
+
+export async function setRouteAdditionalFields(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const additionalFields = this.getNodeParameter('additionalFields', {}) as IDataObject;
+	const body = requestOptions.body as IDataObject | undefined;
+	if (!body) return requestOptions;
+
+	if (additionalFields.units) body.units = additionalFields.units;
+	if (additionalFields.computeAlternativeRoutes) body.computeAlternativeRoutes = true;
+	if (additionalFields.optimizeWaypointOrder) body.optimizeWaypointOrder = true;
+
+	const routeModifiers = buildRouteModifiers(additionalFields);
+	if (Object.keys(routeModifiers).length > 0) body.routeModifiers = routeModifiers;
+
+	return requestOptions;
+}
+
+export async function setDistanceMatrixAdditionalFields(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const additionalFields = this.getNodeParameter('additionalFields', {}) as IDataObject;
+	const body = requestOptions.body as IDataObject | undefined;
+	if (!body) return requestOptions;
+
+	if (additionalFields.units) body.units = additionalFields.units;
+
+	const routeModifiers = buildRouteModifiers(additionalFields);
+	if (Object.keys(routeModifiers).length > 0) {
+		const origins = (body.origins as IDataObject[] | undefined) ?? [];
+		for (const origin of origins) {
+			origin.routeModifiers = routeModifiers;
+		}
+	}
+
+	return requestOptions;
+}
+
 // Geocoding and Timezone wrap failures in a `status` field inside an HTTP 200
 // response instead of using HTTP error codes -- n8n's declarative routing only
 // auto-detects errors from status codes, so without this a bad key or an

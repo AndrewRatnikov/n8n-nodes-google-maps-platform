@@ -1,6 +1,7 @@
 import type { INodeProperties } from 'n8n-workflow';
 import {
 	omitUnsupportedTravelModeOptions,
+	setDistanceMatrixAdditionalFields,
 	setRouteTimes,
 	validateRouteMatrixSize,
 } from '../../GenericFunctions';
@@ -120,6 +121,51 @@ export const getDistanceDurationFieldsDescription: INodeProperties[] = [
 			'Traffic Aware and Traffic Aware Optimal use live traffic data but bill at Google\'s higher Pro SKU tier instead of Essentials, and Traffic Aware Optimal also lowers the max element count from 625 to 100 -- see the README before enabling for high-volume workflows',
 		routing: {
 			send: { type: 'body', property: 'routingPreference' },
+		},
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: { show: showOnlyForGetDistanceDuration },
+		options: [
+			{
+				displayName: 'Avoid Ferries',
+				name: 'avoidFerries',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to avoid ferries where reasonable, applied to every origin',
+			},
+			{
+				displayName: 'Avoid Highways',
+				name: 'avoidHighways',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to avoid highways where reasonable, applied to every origin',
+			},
+			{
+				displayName: 'Avoid Tolls',
+				name: 'avoidTolls',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to avoid toll roads where reasonable, applied to every origin',
+			},
+			{
+				displayName: 'Units',
+				name: 'units',
+				type: 'options',
+				options: [
+					{ name: 'Metric', value: 'METRIC' },
+					{ name: 'Imperial', value: 'IMPERIAL' },
+				],
+				default: 'METRIC',
+				description: 'Units to use for displayed distances. Does not affect the raw distanceMeters value.',
+			},
+		],
+		routing: {
+			send: { preSend: [setDistanceMatrixAdditionalFields] },
 		},
 	},
 ];

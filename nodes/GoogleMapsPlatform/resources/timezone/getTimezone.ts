@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { setTimezoneAdditionalFields } from '../../GenericFunctions';
 
 const showOnlyForGetTimezone = {
 	resource: ['timezone'],
@@ -46,6 +47,27 @@ export const getTimezoneFieldsDescription: INodeProperties[] = [
 				property: 'timestamp',
 				value: '={{Math.floor(new Date($parameter.timestamp).getTime() / 1000)}}',
 			},
+		},
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: { show: showOnlyForGetTimezone },
+		options: [
+			{
+				displayName: 'Language',
+				name: 'language',
+				type: 'string',
+				default: '',
+				description:
+					'The language code (e.g. "en", "es") in which to return the timezone name, per Google\'s list of supported languages',
+			},
+		],
+		routing: {
+			send: { preSend: [setTimezoneAdditionalFields] },
 		},
 	},
 ];

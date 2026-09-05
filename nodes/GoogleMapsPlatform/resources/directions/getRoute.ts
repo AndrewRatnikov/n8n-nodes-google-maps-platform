@@ -1,6 +1,7 @@
 import type { INodeProperties } from 'n8n-workflow';
 import {
 	omitUnsupportedTravelModeOptions,
+	setRouteAdditionalFields,
 	setRouteTimes,
 	validateWaypointCount,
 } from '../../GenericFunctions';
@@ -124,6 +125,66 @@ export const getRouteFieldsDescription: INodeProperties[] = [
 				value: '={{$value.map((address) => ({ address })) }}',
 				preSend: [validateWaypointCount],
 			},
+		},
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: { show: showOnlyForGetRoute },
+		options: [
+			{
+				displayName: 'Avoid Ferries',
+				name: 'avoidFerries',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to avoid ferries where reasonable',
+			},
+			{
+				displayName: 'Avoid Highways',
+				name: 'avoidHighways',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to avoid highways where reasonable',
+			},
+			{
+				displayName: 'Avoid Tolls',
+				name: 'avoidTolls',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to avoid toll roads where reasonable',
+			},
+			{
+				displayName: 'Compute Alternative Routes',
+				name: 'computeAlternativeRoutes',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to also return alternative routes in addition to the best one',
+			},
+			{
+				displayName: 'Optimize Waypoint Order',
+				name: 'optimizeWaypointOrder',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether to let Google reorder the intermediate waypoints to minimize total route cost. Only applies when Waypoints are set. This is a Pro-SKU-billing trigger -- see the README before enabling for high-volume workflows.',
+			},
+			{
+				displayName: 'Units',
+				name: 'units',
+				type: 'options',
+				options: [
+					{ name: 'Metric', value: 'METRIC' },
+					{ name: 'Imperial', value: 'IMPERIAL' },
+				],
+				default: 'METRIC',
+				description: 'Units to use for displayed distances. Does not affect the raw distanceMeters value.',
+			},
+		],
+		routing: {
+			send: { preSend: [setRouteAdditionalFields] },
 		},
 	},
 ];

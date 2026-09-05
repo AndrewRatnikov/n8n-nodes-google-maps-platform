@@ -159,7 +159,7 @@ A cheap structural test over the exported description catches most of that: ever
 - [x] Wire `setRouteTimes` into Get Distance & Duration (finding 7)
 
 ### Architecture
-- [ ] Add an Additional Fields collection per operation, before adding any new optional field
+- [x] Add an Additional Fields collection per operation, before adding any new optional field
 - [ ] Add an input-type selector (Address / Coordinates / Place ID) for Route and Matrix waypoints
 - [ ] Make `routes.legs` conditional on an "Include Steps" toggle, default off
 - [ ] Add a structural test over the node description

@@ -5,7 +5,12 @@ import {
 	handleGeocodingResponse,
 	handleTimezoneResponse,
 	omitUnsupportedTravelModeOptions,
+	setDistanceMatrixAdditionalFields,
+	setGeocodeAdditionalFields,
+	setReverseGeocodeAdditionalFields,
+	setRouteAdditionalFields,
 	setRouteTimes,
+	setTimezoneAdditionalFields,
 	validateRouteMatrixSize,
 	validateWaypointCount,
 } from '../nodes/GoogleMapsPlatform/GenericFunctions';
@@ -73,6 +78,113 @@ describe('omitUnsupportedTravelModeOptions', () => {
 		await omitUnsupportedTravelModeOptions.call(ctx, requestOptions);
 
 		expect(requestOptions.body).toEqual({ travelMode: 'TRANSIT' });
+	});
+});
+
+describe('setGeocodeAdditionalFields', () => {
+	it('leaves qs untouched when no additional fields are set', async () => {
+		const ctx = createMockContext({ parameters: { additionalFields: {} } });
+		const requestOptions = { url: 'https://maps.googleapis.com', qs: { address: 'Berlin' } };
+		await setGeocodeAdditionalFields.call(ctx, requestOptions);
+		expect(requestOptions.qs).toEqual({ address: 'Berlin' });
+	});
+
+	it('adds language, region, and components when set', async () => {
+		const ctx = createMockContext({
+			parameters: {
+				additionalFields: { language: 'de', region: 'de', components: 'country:DE' },
+			},
+		});
+		const requestOptions = { url: 'https://maps.googleapis.com', qs: { address: 'Berlin' } };
+		await setGeocodeAdditionalFields.call(ctx, requestOptions);
+		expect(requestOptions.qs).toEqual({
+			address: 'Berlin',
+			language: 'de',
+			region: 'de',
+			components: 'country:DE',
+		});
+	});
+});
+
+describe('setReverseGeocodeAdditionalFields', () => {
+	it('adds language when set', async () => {
+		const ctx = createMockContext({ parameters: { additionalFields: { language: 'fr' } } });
+		const requestOptions = { url: 'https://maps.googleapis.com', qs: { latlng: '1,2' } };
+		await setReverseGeocodeAdditionalFields.call(ctx, requestOptions);
+		expect(requestOptions.qs).toEqual({ latlng: '1,2', language: 'fr' });
+	});
+});
+
+describe('setTimezoneAdditionalFields', () => {
+	it('adds language when set', async () => {
+		const ctx = createMockContext({ parameters: { additionalFields: { language: 'ja' } } });
+		const requestOptions = { url: 'https://maps.googleapis.com', qs: { location: '1,2' } };
+		await setTimezoneAdditionalFields.call(ctx, requestOptions);
+		expect(requestOptions.qs).toEqual({ location: '1,2', language: 'ja' });
+	});
+});
+
+describe('setRouteAdditionalFields', () => {
+	it('leaves body untouched when no additional fields are set', async () => {
+		const ctx = createMockContext({ parameters: { additionalFields: {} } });
+		const requestOptions = { url: 'https://routes.googleapis.com', body: { travelMode: 'DRIVE' } };
+		await setRouteAdditionalFields.call(ctx, requestOptions);
+		expect(requestOptions.body).toEqual({ travelMode: 'DRIVE' });
+	});
+
+	it('sets units, alternative routes, waypoint optimization, and route modifiers', async () => {
+		const ctx = createMockContext({
+			parameters: {
+				additionalFields: {
+					units: 'IMPERIAL',
+					computeAlternativeRoutes: true,
+					optimizeWaypointOrder: true,
+					avoidTolls: true,
+					avoidFerries: true,
+				},
+			},
+		});
+		const requestOptions = { url: 'https://routes.googleapis.com', body: { travelMode: 'DRIVE' } };
+		await setRouteAdditionalFields.call(ctx, requestOptions);
+		expect(requestOptions.body).toEqual({
+			travelMode: 'DRIVE',
+			units: 'IMPERIAL',
+			computeAlternativeRoutes: true,
+			optimizeWaypointOrder: true,
+			routeModifiers: { avoidTolls: true, avoidFerries: true },
+		});
+	});
+});
+
+describe('setDistanceMatrixAdditionalFields', () => {
+	it('leaves body untouched when no additional fields are set', async () => {
+		const ctx = createMockContext({ parameters: { additionalFields: {} } });
+		const requestOptions = {
+			url: 'https://routes.googleapis.com',
+			body: { origins: [{ waypoint: { address: 'A' } }] },
+		};
+		await setDistanceMatrixAdditionalFields.call(ctx, requestOptions);
+		expect(requestOptions.body).toEqual({ origins: [{ waypoint: { address: 'A' } }] });
+	});
+
+	it('applies route modifiers to every origin and sets units', async () => {
+		const ctx = createMockContext({
+			parameters: { additionalFields: { units: 'IMPERIAL', avoidHighways: true } },
+		});
+		const requestOptions = {
+			url: 'https://routes.googleapis.com',
+			body: {
+				origins: [{ waypoint: { address: 'A' } }, { waypoint: { address: 'B' } }],
+			},
+		};
+		await setDistanceMatrixAdditionalFields.call(ctx, requestOptions);
+		expect(requestOptions.body).toEqual({
+			units: 'IMPERIAL',
+			origins: [
+				{ waypoint: { address: 'A' }, routeModifiers: { avoidHighways: true } },
+				{ waypoint: { address: 'B' }, routeModifiers: { avoidHighways: true } },
+			],
+		});
 	});
 });
 

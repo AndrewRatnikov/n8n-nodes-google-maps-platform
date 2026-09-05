@@ -1,4 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { setReverseGeocodeAdditionalFields } from '../../GenericFunctions';
 
 const showOnlyForReverseGeocode = {
 	resource: ['geocoding'],
@@ -39,5 +40,26 @@ export const reverseGeocodeFieldsDescription: INodeProperties[] = [
 		displayOptions: { show: showOnlyForReverseGeocode },
 		description:
 			'Whether to return every match Google finds as a separate item. When off, only the first (most specific) match is returned.',
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: { show: showOnlyForReverseGeocode },
+		options: [
+			{
+				displayName: 'Language',
+				name: 'language',
+				type: 'string',
+				default: '',
+				description:
+					'The language code (e.g. "en", "es") in which to return results, per Google\'s list of supported languages',
+			},
+		],
+		routing: {
+			send: { preSend: [setReverseGeocodeAdditionalFields] },
+		},
 	},
 ];
