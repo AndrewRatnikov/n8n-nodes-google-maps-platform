@@ -150,7 +150,7 @@ A cheap structural test over the exported description catches most of that: ever
 ## Checklist
 
 ### Bugs
-- [ ] Expose `requestOptions` batching so multi-item runs don't fan out unthrottled (finding 1)
+- [x] Expose `requestOptions` batching so multi-item runs don't fan out unthrottled (finding 1)
 - [ ] Enforce the 50-address origins + destinations cap in `validateRouteMatrixSize`, with a unit test (finding 2)
 - [ ] Mark Two Wheeler as Enterprise-tier in both Travel Mode fields and in the README billing section (finding 3)
 - [ ] Give `handleTimezoneResponse` the same `ZERO_RESULTS` branch as the Geocoding handler (finding 4)

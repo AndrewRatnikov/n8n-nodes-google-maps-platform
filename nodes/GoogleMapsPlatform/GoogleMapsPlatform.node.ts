@@ -46,6 +46,52 @@ export class GoogleMapsPlatform implements INodeType {
 			...geocodingDescription,
 			...directionsDescription,
 			...timezoneDescription,
+			{
+				displayName: 'Request Options',
+				name: 'requestOptions',
+				type: 'collection',
+				isNodeSetting: true,
+				placeholder: 'Add Option',
+				default: {},
+				options: [
+					{
+						displayName: 'Batching',
+						name: 'batching',
+						placeholder: 'Add Batching',
+						type: 'fixedCollection',
+						typeOptions: { multipleValues: false },
+						default: {
+							batch: {},
+						},
+						options: [
+							{
+								displayName: 'Batching',
+								name: 'batch',
+								values: [
+									{
+										displayName: 'Items per Batch',
+										name: 'batchSize',
+										type: 'number',
+										typeOptions: { minValue: -1 },
+										default: 10,
+										description:
+											'Input will be split in batches to throttle requests. -1 for disabled. 0 will be treated as 1.',
+									},
+									{
+										displayName: 'Batch Interval (Ms)',
+										name: 'batchInterval',
+										type: 'number',
+										typeOptions: { minValue: 0 },
+										default: 1000,
+										description:
+											'Time (in milliseconds) between each batch of requests. 0 for disabled.',
+									},
+								],
+							},
+						],
+					},
+				],
+			},
 		],
 	};
 }
