@@ -11,6 +11,7 @@ import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 const MAX_INTERMEDIATE_WAYPOINTS = 25;
 const MAX_ROUTE_MATRIX_ELEMENTS = 625;
 const MAX_ROUTE_MATRIX_ELEMENTS_RESTRICTED = 100;
+const MAX_ROUTE_MATRIX_ADDRESSES = 50;
 const ROUTING_PREFERENCE_TRAVEL_MODES = new Set(['DRIVE', 'TWO_WHEELER']);
 
 export async function omitUnsupportedTravelModeOptions(
@@ -102,6 +103,14 @@ export async function validateRouteMatrixSize(
 		'routingPreference',
 		'TRAFFIC_UNAWARE',
 	) as string;
+
+	const addressCount = origins.length + destinations.length;
+	if (addressCount > MAX_ROUTE_MATRIX_ADDRESSES) {
+		throw new NodeOperationError(
+			this.getNode(),
+			`This request has ${addressCount} addresses (${origins.length} origins + ${destinations.length} destinations), which exceeds Google's ${MAX_ROUTE_MATRIX_ADDRESSES}-address limit. Reduce the number of origins or destinations.`,
+		);
+	}
 
 	const elementCount = origins.length * destinations.length;
 	const isRestricted = travelMode === 'TRANSIT' || routingPreference === 'TRAFFIC_AWARE_OPTIMAL';

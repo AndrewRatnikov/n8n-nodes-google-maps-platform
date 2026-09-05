@@ -193,15 +193,6 @@ describe('validateRouteMatrixSize', () => {
 		).resolves.toBeDefined();
 	});
 
-	it('throws over the 625-element limit', async () => {
-		const ctx = createMockContext({
-			parameters: { ...baseParams, origins: Array(26).fill('a'), destinations: Array(25).fill('b') },
-		});
-		await expect(
-			validateRouteMatrixSize.call(ctx, { url: 'https://routes.googleapis.com' }),
-		).rejects.toThrow(/625-element limit/);
-	});
-
 	it('throws over the 100-element limit when travelMode is TRANSIT', async () => {
 		const ctx = createMockContext({
 			parameters: {
@@ -228,6 +219,24 @@ describe('validateRouteMatrixSize', () => {
 		await expect(
 			validateRouteMatrixSize.call(ctx, { url: 'https://routes.googleapis.com' }),
 		).rejects.toThrow(/100-element limit/);
+	});
+
+	it('throws over the 50-address cap even under the 625-element limit', async () => {
+		const ctx = createMockContext({
+			parameters: { ...baseParams, origins: Array(40).fill('a'), destinations: Array(15).fill('b') },
+		});
+		await expect(
+			validateRouteMatrixSize.call(ctx, { url: 'https://routes.googleapis.com' }),
+		).rejects.toThrow(/50-address limit/);
+	});
+
+	it('allows exactly 50 addresses', async () => {
+		const ctx = createMockContext({
+			parameters: { ...baseParams, origins: Array(25).fill('a'), destinations: Array(25).fill('b') },
+		});
+		await expect(
+			validateRouteMatrixSize.call(ctx, { url: 'https://routes.googleapis.com' }),
+		).resolves.toBeDefined();
 	});
 
 	it('allows exactly 100 elements under TRANSIT', async () => {
