@@ -57,11 +57,11 @@ export const getDistanceDurationFieldsDescription: INodeProperties[] = [
 			{ name: 'Bicycle', value: 'BICYCLE' },
 			{ name: 'Drive', value: 'DRIVE' },
 			{ name: 'Transit', value: 'TRANSIT' },
-			{ name: 'Two Wheeler', value: 'TWO_WHEELER' },
+			{ name: 'Two Wheeler (Enterprise Pricing)', value: 'TWO_WHEELER' },
 			{ name: 'Walk', value: 'WALK' },
 		],
 		description:
-			'How to travel between origins and destinations. Transit mode lowers the max element count from 625 to 100 per request.',
+			'How to travel between origins and destinations. Transit mode lowers the max element count from 625 to 100 per request. Two Wheeler bills at Google\'s Enterprise SKU tier, which has the smallest free tier of the three (1,000 events/month) -- see the README before enabling for high-volume workflows.',
 		routing: {
 			send: {
 				type: 'body',

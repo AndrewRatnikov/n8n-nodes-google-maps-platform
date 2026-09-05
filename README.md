@@ -59,6 +59,7 @@ That result feeds directly into Distance Matrix as the origin, computing real di
 
 - The March 2025 pricing restructure replaced Google's flat monthly credit with **per-SKU free tiers**: 10,000 events/month for Essentials, 5,000 for Pro, 1,000 for Enterprise. Geocoding, Timezone, and basic Directions/Distance Matrix calls are Essentials.
 - Setting **Routing Preference** to `TRAFFIC_AWARE` or `TRAFFIC_AWARE_OPTIMAL` on Get Route or Get Distance & Duration moves that request to the **Pro** tier and its lower 5,000/month cap. So does using more than 10 waypoints on Get Route.
+- Setting **Travel Mode** to `Two Wheeler` on Get Route or Get Distance & Duration moves that request to the **Enterprise** tier — the smallest free tier of the three, at 1,000 events/month.
 - **Get Distance & Duration bills per element**, not per request: `origins × destinations`. A 25×25 request is 625 billable elements — about 16 such calls exhausts the entire monthly Essentials free tier. This is invisible from the n8n canvas, where it looks like one node execution.
 
 ## Security notes

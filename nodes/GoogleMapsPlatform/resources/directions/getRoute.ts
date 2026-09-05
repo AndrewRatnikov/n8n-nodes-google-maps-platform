@@ -45,10 +45,11 @@ export const getRouteFieldsDescription: INodeProperties[] = [
 			{ name: 'Bicycle', value: 'BICYCLE' },
 			{ name: 'Drive', value: 'DRIVE' },
 			{ name: 'Transit', value: 'TRANSIT' },
-			{ name: 'Two Wheeler', value: 'TWO_WHEELER' },
+			{ name: 'Two Wheeler (Enterprise Pricing)', value: 'TWO_WHEELER' },
 			{ name: 'Walk', value: 'WALK' },
 		],
-		description: 'How to travel between origin and destination',
+		description:
+			'How to travel between origin and destination. Two Wheeler bills at Google\'s Enterprise SKU tier, which has the smallest free tier of the three (1,000 events/month) -- see the README before enabling for high-volume workflows.',
 		routing: {
 			send: {
 				type: 'body',
