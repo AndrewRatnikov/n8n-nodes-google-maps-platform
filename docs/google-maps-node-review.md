@@ -155,7 +155,7 @@ A cheap structural test over the exported description catches most of that: ever
 - [x] Mark Two Wheeler as Enterprise-tier in both Travel Mode fields and in the README billing section (finding 3)
 - [x] Give `handleTimezoneResponse` the same `ZERO_RESULTS` branch as the Geocoding handler (finding 4)
 - [x] Fix the `#credentials` anchor in the credential and in `GoogleMapsPlatform.node.json` (finding 5)
-- [ ] Add `npm test` to the CI workflow (finding 6)
+- [x] Add `npm test` to the CI workflow (finding 6)
 - [ ] Wire `setRouteTimes` into Get Distance & Duration (finding 7)
 
 ### Architecture
