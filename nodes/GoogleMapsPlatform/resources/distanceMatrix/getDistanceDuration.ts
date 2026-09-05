@@ -1,6 +1,7 @@
 import type { INodeProperties } from 'n8n-workflow';
 import {
 	omitUnsupportedTravelModeOptions,
+	setRouteTimes,
 	validateRouteMatrixSize,
 } from '../../GenericFunctions';
 
@@ -66,8 +67,34 @@ export const getDistanceDurationFieldsDescription: INodeProperties[] = [
 			send: {
 				type: 'body',
 				property: 'travelMode',
-				preSend: [omitUnsupportedTravelModeOptions],
+				preSend: [omitUnsupportedTravelModeOptions, setRouteTimes],
 			},
+		},
+	},
+	{
+		displayName: 'Departure Time',
+		name: 'departureTime',
+		type: 'dateTime',
+		default: '',
+		displayOptions: { show: showOnlyForGetDistanceDuration },
+		description:
+			'Optional trip start time used for traffic and transit calculations. When omitted, Google uses the time of the request. Past departure times are supported only for transit routes. Cannot be used together with Arrival Time.',
+		routing: {
+			send: { type: 'body', property: 'departureTime' },
+		},
+	},
+	{
+		displayName: 'Arrival Time',
+		name: 'arrivalTime',
+		type: 'dateTime',
+		default: '',
+		displayOptions: {
+			show: { ...showOnlyForGetDistanceDuration, travelMode: ['TRANSIT'] },
+		},
+		description:
+			'Optional desired arrival time for transit routes. Cannot be used together with Departure Time.',
+		routing: {
+			send: { type: 'body', property: 'arrivalTime' },
 		},
 	},
 	{
