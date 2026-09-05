@@ -181,6 +181,10 @@ export async function handleTimezoneResponse(
 	const status = body.status as string;
 	const pairedItem = items[0]?.pairedItem;
 
+	if (status === 'ZERO_RESULTS') {
+		return [{ json: { status }, pairedItem }];
+	}
+
 	if (status !== 'OK') {
 		const message = extractGoogleApiErrorMessage(body, status);
 		if (this.continueOnFail()) {

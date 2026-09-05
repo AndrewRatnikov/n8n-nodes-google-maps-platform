@@ -310,6 +310,14 @@ describe('handleTimezoneResponse', () => {
 		expect(items[0].json).toMatchObject({ status: 'INVALID_REQUEST' });
 	});
 
+	it('returns one flagged item for ZERO_RESULTS instead of throwing', async () => {
+		const ctx = createMockContext({ continueOnFail: false });
+		const body = { status: 'ZERO_RESULTS' };
+		const items = await handleTimezoneResponse.call(ctx, dummyItems, mockResponse(body));
+		expect(items).toHaveLength(1);
+		expect(items[0].json).toEqual({ status: 'ZERO_RESULTS' });
+	});
+
 	it('throws when Continue On Fail is off', async () => {
 		const ctx = createMockContext({ continueOnFail: false });
 		const body = { status: 'INVALID_REQUEST' };
