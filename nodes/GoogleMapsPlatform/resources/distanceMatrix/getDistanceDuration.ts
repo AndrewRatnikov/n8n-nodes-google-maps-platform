@@ -110,12 +110,12 @@ export const getDistanceDurationFieldsDescription: INodeProperties[] = [
 			},
 		},
 		options: [
+			{ name: 'Traffic Unaware (Essentials Pricing)', value: 'TRAFFIC_UNAWARE' },
 			{ name: 'Traffic Aware (Pro Pricing)', value: 'TRAFFIC_AWARE' },
 			{
 				name: 'Traffic Aware Optimal (Pro Pricing, 100-Element Cap)',
 				value: 'TRAFFIC_AWARE_OPTIMAL',
 			},
-			{ name: 'Traffic Unaware (Essentials Pricing)', value: 'TRAFFIC_UNAWARE' },
 		],
 		description:
 			'Traffic Aware and Traffic Aware Optimal use live traffic data but bill at Google\'s higher Pro SKU tier instead of Essentials, and Traffic Aware Optimal also lowers the max element count from 625 to 100 -- see the README before enabling for high-volume workflows',
