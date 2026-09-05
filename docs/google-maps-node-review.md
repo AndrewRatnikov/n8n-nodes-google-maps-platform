@@ -168,5 +168,5 @@ A cheap structural test over the exported description catches most of that: ever
 - [x] Align Routing Preference option order across the two operations -- standardized on Get Route's order (Unaware, Aware, Aware Optimal), a progression rather than alphabetical
 - [x] Rewrite CLAUDE.md's "Project state" section — it still describes the node as unimplemented scaffold
 - [x] Reconcile the dev-server port between the README and CLAUDE.md -- `@n8n/node-cli`'s own default is 5678 (confirmed against its README); the README's 5679 was a dev-machine-specific workaround for a port already in use locally, not the general case
-- [ ] Pin `@n8n/node-cli` to a range with a ≥ 0.23.0 floor
+- [x] Pin `@n8n/node-cli` to a range with a ≥ 0.23.0 floor -- pinned to `^0.43.4` (the currently installed version), comfortably clearing the floor `publish.yml` documents while blocking a surprise minor bump mid-release
 - [x] Use display names in the node `subtitle`
