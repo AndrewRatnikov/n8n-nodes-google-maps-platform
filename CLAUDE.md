@@ -8,6 +8,7 @@ Scaffolded via `@n8n/node-cli` (declarative/custom template) on 2026-08-14. `pac
 
 - [docs/google-maps-node-plan.md](docs/google-maps-node-plan.md) — high-level plan: pitch, scope, and the architecture decision (why Routes API, not the legacy Directions/Distance Matrix APIs).
 - [docs/google-maps-node-implementation.md](docs/google-maps-node-implementation.md) — detailed implementation plan: exact endpoints, auth wiring, step-by-step build sequence with code, and every gotcha (billing tiers, field masks, enum casing, etc.). This is the single source of truth for *how* to build it, and tracks progress with checkboxes — check items off as they're done.
+- [docs/google-maps-node-review.md](docs/google-maps-node-review.md) — post-`0.1.3` review: open bugs, architecture changes to make next, and the verified facts behind each. Tracks its findings with checkboxes the same way.
 
 For n8n's own conventions on node/credential file structure — separate from this project's specifics above — see `@AGENTS.md`.
 
