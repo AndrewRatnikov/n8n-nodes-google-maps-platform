@@ -1,5 +1,8 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { validateRouteMatrixSize } from '../../GenericFunctions';
+import {
+	omitUnsupportedTravelModeOptions,
+	validateRouteMatrixSize,
+} from '../../GenericFunctions';
 
 const showOnlyForGetDistanceDuration = {
 	resource: ['distanceMatrix'],
@@ -60,7 +63,11 @@ export const getDistanceDurationFieldsDescription: INodeProperties[] = [
 		description:
 			'How to travel between origins and destinations. Transit mode lowers the max element count from 625 to 100 per request.',
 		routing: {
-			send: { type: 'body', property: 'travelMode' },
+			send: {
+				type: 'body',
+				property: 'travelMode',
+				preSend: [omitUnsupportedTravelModeOptions],
+			},
 		},
 	},
 	{
@@ -68,7 +75,12 @@ export const getDistanceDurationFieldsDescription: INodeProperties[] = [
 		name: 'routingPreference',
 		type: 'options',
 		default: 'TRAFFIC_UNAWARE',
-		displayOptions: { show: showOnlyForGetDistanceDuration },
+		displayOptions: {
+			show: {
+				...showOnlyForGetDistanceDuration,
+				travelMode: ['DRIVE', 'TWO_WHEELER'],
+			},
+		},
 		options: [
 			{ name: 'Traffic Aware (Pro Pricing)', value: 'TRAFFIC_AWARE' },
 			{

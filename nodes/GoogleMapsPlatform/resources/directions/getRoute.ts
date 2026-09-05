@@ -1,5 +1,9 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { validateWaypointCount } from '../../GenericFunctions';
+import {
+	omitUnsupportedTravelModeOptions,
+	setRouteTimes,
+	validateWaypointCount,
+} from '../../GenericFunctions';
 
 const showOnlyForGetRoute = {
 	resource: ['directions'],
@@ -46,7 +50,37 @@ export const getRouteFieldsDescription: INodeProperties[] = [
 		],
 		description: 'How to travel between origin and destination',
 		routing: {
-			send: { type: 'body', property: 'travelMode' },
+			send: {
+				type: 'body',
+				property: 'travelMode',
+				preSend: [omitUnsupportedTravelModeOptions, setRouteTimes],
+			},
+		},
+	},
+	{
+		displayName: 'Departure Time',
+		name: 'departureTime',
+		type: 'dateTime',
+		default: '',
+		displayOptions: { show: showOnlyForGetRoute },
+		description:
+			'Optional trip start time used for traffic and transit calculations. When omitted, Google uses the time of the request. Past departure times are supported only for transit routes. Cannot be used together with Arrival Time.',
+		routing: {
+			send: { type: 'body', property: 'departureTime' },
+		},
+	},
+	{
+		displayName: 'Arrival Time',
+		name: 'arrivalTime',
+		type: 'dateTime',
+		default: '',
+		displayOptions: {
+			show: { ...showOnlyForGetRoute, travelMode: ['TRANSIT'] },
+		},
+		description:
+			'Optional desired arrival time for transit routes. Cannot be used together with Departure Time.',
+		routing: {
+			send: { type: 'body', property: 'arrivalTime' },
 		},
 	},
 	{
@@ -54,7 +88,9 @@ export const getRouteFieldsDescription: INodeProperties[] = [
 		name: 'routingPreference',
 		type: 'options',
 		default: 'TRAFFIC_UNAWARE',
-		displayOptions: { show: showOnlyForGetRoute },
+		displayOptions: {
+			show: { ...showOnlyForGetRoute, travelMode: ['DRIVE', 'TWO_WHEELER'] },
+		},
 		options: [
 			{ name: 'Traffic Unaware (Essentials Pricing)', value: 'TRAFFIC_UNAWARE' },
 			{ name: 'Traffic Aware (Pro Pricing)', value: 'TRAFFIC_AWARE' },
@@ -72,9 +108,14 @@ export const getRouteFieldsDescription: INodeProperties[] = [
 		type: 'string',
 		typeOptions: { multipleValues: true, multipleValueButtonText: 'Add Waypoint' },
 		default: [],
-		displayOptions: { show: showOnlyForGetRoute },
+		displayOptions: {
+			show: {
+				...showOnlyForGetRoute,
+				travelMode: ['BICYCLE', 'DRIVE', 'TWO_WHEELER', 'WALK'],
+			},
+		},
 		description:
-			'Optional intermediate addresses the route must pass through, in order. Up to 25 total; using more than 10 moves the request to Google\'s Pro pricing tier.',
+			'Optional intermediate addresses the route must pass through, in order. Up to 25 total; using more than 10 moves the request to Google\'s Pro pricing tier. Transit routes do not support intermediate waypoints.',
 		routing: {
 			send: {
 				type: 'body',

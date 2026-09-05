@@ -11,6 +11,69 @@ import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 const MAX_INTERMEDIATE_WAYPOINTS = 25;
 const MAX_ROUTE_MATRIX_ELEMENTS = 625;
 const MAX_ROUTE_MATRIX_ELEMENTS_RESTRICTED = 100;
+const ROUTING_PREFERENCE_TRAVEL_MODES = new Set(['DRIVE', 'TWO_WHEELER']);
+
+export async function omitUnsupportedTravelModeOptions(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const travelMode = this.getNodeParameter('travelMode', 'DRIVE') as string;
+	const body = requestOptions.body as IDataObject | undefined;
+
+	if (!body) return requestOptions;
+
+	if (!ROUTING_PREFERENCE_TRAVEL_MODES.has(travelMode)) {
+		delete body.routingPreference;
+	}
+
+	if (travelMode === 'TRANSIT') {
+		delete body.intermediates;
+	}
+
+	return requestOptions;
+}
+
+function toRfc3339(value: string, displayName: string, context: IExecuteSingleFunctions): string {
+	const timestamp = Date.parse(value);
+	if (Number.isNaN(timestamp)) {
+		throw new NodeOperationError(context.getNode(), `${displayName} must be a valid date and time.`);
+	}
+
+	return new Date(timestamp).toISOString();
+}
+
+export async function setRouteTimes(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const departureTime = this.getNodeParameter('departureTime', '') as string;
+	const arrivalTime = this.getNodeParameter('arrivalTime', '') as string;
+	const travelMode = this.getNodeParameter('travelMode', 'DRIVE') as string;
+	const effectiveArrivalTime = travelMode === 'TRANSIT' ? arrivalTime : '';
+	const body = requestOptions.body as IDataObject | undefined;
+
+	if (!body) return requestOptions;
+
+	delete body.departureTime;
+	delete body.arrivalTime;
+
+	if (departureTime && effectiveArrivalTime) {
+		throw new NodeOperationError(
+			this.getNode(),
+			'Set either Departure Time or Arrival Time, not both.',
+		);
+	}
+
+	if (departureTime) {
+		body.departureTime = toRfc3339(departureTime, 'Departure Time', this);
+	}
+
+	if (effectiveArrivalTime) {
+		body.arrivalTime = toRfc3339(effectiveArrivalTime, 'Arrival Time', this);
+	}
+
+	return requestOptions;
+}
 
 export async function validateWaypointCount(
 	this: IExecuteSingleFunctions,

@@ -4,6 +4,8 @@ import {
 	flattenRouteMatrixResponse,
 	handleGeocodingResponse,
 	handleTimezoneResponse,
+	omitUnsupportedTravelModeOptions,
+	setRouteTimes,
 	validateRouteMatrixSize,
 	validateWaypointCount,
 } from '../nodes/GoogleMapsPlatform/GenericFunctions';
@@ -25,6 +27,144 @@ const dummyItems: INodeExecutionData[] = [{ json: {}, pairedItem: { item: 0 } }]
 function mockResponse(body: unknown): IN8nHttpFullResponse {
 	return { body, headers: {}, statusCode: 200 } as IN8nHttpFullResponse;
 }
+
+describe('omitUnsupportedTravelModeOptions', () => {
+	it.each(['BICYCLE', 'TRANSIT', 'WALK'])(
+		'omits routingPreference for %s requests',
+		async (travelMode) => {
+			const ctx = createMockContext({ parameters: { travelMode } });
+			const requestOptions = {
+				url: 'https://routes.googleapis.com',
+				body: { travelMode, routingPreference: 'TRAFFIC_UNAWARE' },
+			};
+
+			await omitUnsupportedTravelModeOptions.call(ctx, requestOptions);
+
+			expect(requestOptions.body).toEqual({ travelMode });
+		},
+	);
+
+	it.each(['DRIVE', 'TWO_WHEELER'])(
+		'keeps routingPreference for %s requests',
+		async (travelMode) => {
+			const ctx = createMockContext({ parameters: { travelMode } });
+			const requestOptions = {
+				url: 'https://routes.googleapis.com',
+				body: { travelMode, routingPreference: 'TRAFFIC_UNAWARE' },
+			};
+
+			await omitUnsupportedTravelModeOptions.call(ctx, requestOptions);
+
+			expect(requestOptions.body).toEqual({ travelMode, routingPreference: 'TRAFFIC_UNAWARE' });
+		},
+	);
+
+	it('omits intermediate waypoints for transit requests', async () => {
+		const ctx = createMockContext({ parameters: { travelMode: 'TRANSIT' } });
+		const requestOptions = {
+			url: 'https://routes.googleapis.com',
+			body: {
+				travelMode: 'TRANSIT',
+				routingPreference: 'TRAFFIC_UNAWARE',
+				intermediates: [{ address: 'Stale waypoint' }],
+			},
+		};
+
+		await omitUnsupportedTravelModeOptions.call(ctx, requestOptions);
+
+		expect(requestOptions.body).toEqual({ travelMode: 'TRANSIT' });
+	});
+});
+
+describe('setRouteTimes', () => {
+	it('omits route times when they are blank', async () => {
+		const ctx = createMockContext({ parameters: { departureTime: '', arrivalTime: '' } });
+		const requestOptions = {
+			url: 'https://routes.googleapis.com',
+			body: { departureTime: '', arrivalTime: '' },
+		};
+
+		await setRouteTimes.call(ctx, requestOptions);
+
+		expect(requestOptions.body).toEqual({});
+	});
+
+	it('converts departureTime to RFC 3339 UTC format', async () => {
+		const ctx = createMockContext({
+			parameters: { departureTime: '2026-09-04T09:30:00+02:00' },
+		});
+		const requestOptions = {
+			url: 'https://routes.googleapis.com',
+			body: { departureTime: '2026-09-04T09:30:00+02:00' },
+		};
+
+		await setRouteTimes.call(ctx, requestOptions);
+
+		expect(requestOptions.body.departureTime).toBe('2026-09-04T07:30:00.000Z');
+	});
+
+	it('converts arrivalTime for transit requests to RFC 3339 UTC format', async () => {
+		const ctx = createMockContext({
+			parameters: { travelMode: 'TRANSIT', arrivalTime: '2026-09-04T09:30:00+02:00' },
+		});
+		const requestOptions = {
+			url: 'https://routes.googleapis.com',
+			body: { travelMode: 'TRANSIT', arrivalTime: '2026-09-04T09:30:00+02:00' },
+		};
+
+		await setRouteTimes.call(ctx, requestOptions);
+
+		expect(requestOptions.body.arrivalTime).toBe('2026-09-04T07:30:00.000Z');
+	});
+
+	it('omits a stale arrivalTime for non-transit requests', async () => {
+		const ctx = createMockContext({
+			parameters: { travelMode: 'DRIVE', arrivalTime: '2026-09-04T09:30:00+02:00' },
+		});
+		const requestOptions = {
+			url: 'https://routes.googleapis.com',
+			body: { travelMode: 'DRIVE', arrivalTime: '2026-09-04T09:30:00+02:00' },
+		};
+
+		await setRouteTimes.call(ctx, requestOptions);
+
+		expect(requestOptions.body).toEqual({ travelMode: 'DRIVE' });
+	});
+
+	it('rejects setting both departureTime and arrivalTime for transit', async () => {
+		const ctx = createMockContext({
+			parameters: {
+				travelMode: 'TRANSIT',
+				departureTime: '2026-09-04T08:30:00Z',
+				arrivalTime: '2026-09-04T09:30:00Z',
+			},
+		});
+		const requestOptions = {
+			url: 'https://routes.googleapis.com',
+			body: {
+				travelMode: 'TRANSIT',
+				departureTime: '2026-09-04T08:30:00Z',
+				arrivalTime: '2026-09-04T09:30:00Z',
+			},
+		};
+
+		await expect(setRouteTimes.call(ctx, requestOptions)).rejects.toThrow(
+			/Set either Departure Time or Arrival Time, not both/,
+		);
+	});
+
+	it('rejects an invalid departureTime', async () => {
+		const ctx = createMockContext({ parameters: { departureTime: 'not-a-date' } });
+		const requestOptions = {
+			url: 'https://routes.googleapis.com',
+			body: { departureTime: 'not-a-date' },
+		};
+
+		await expect(setRouteTimes.call(ctx, requestOptions)).rejects.toThrow(
+			/Departure Time must be a valid date and time/,
+		);
+	});
+});
 
 describe('validateWaypointCount', () => {
 	it('passes through when under the limit', async () => {
