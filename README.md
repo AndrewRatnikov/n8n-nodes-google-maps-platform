@@ -10,7 +10,7 @@ Directions and Distance Matrix are built on Google's current **Routes API**, not
 |---|---|---|
 | Geocoding | Geocode | Address → coordinates, formatted address, place components |
 | Geocoding | Reverse Geocode | Coordinates → human-readable address |
-| Route | Get Route | Origin + destination (+ optional departure/arrival time and waypoints) → distance, duration, turn-by-turn steps, polyline |
+| Route | Get Route | Origin + destination (as address, coordinates, or Place ID) (+ optional departure/arrival time and waypoints) → distance, duration, turn-by-turn steps, polyline |
 | Distance Matrix | Get Distance & Duration | Batch of origins × destinations → distance/duration for every pair |
 | Timezone | Get Timezone | Coordinates + point in time → IANA timezone ID and UTC offset |
 

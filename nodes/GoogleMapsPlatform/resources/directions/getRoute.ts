@@ -11,18 +11,80 @@ const showOnlyForGetRoute = {
 	operation: ['getRoute'],
 };
 
+const locationTypeOptions = [
+	{ name: 'Address', value: 'address' },
+	{ name: 'Coordinates', value: 'coordinates' },
+	{ name: 'Place ID', value: 'placeId' },
+];
+
 export const getRouteFieldsDescription: INodeProperties[] = [
+	{
+		displayName: 'Origin Type',
+		name: 'originType',
+		type: 'options',
+		default: 'address',
+		displayOptions: { show: showOnlyForGetRoute },
+		options: locationTypeOptions,
+		description:
+			'How the origin is specified. Coordinates and Place ID avoid a second geocoding call when chaining from a Geocode node.',
+	},
 	{
 		displayName: 'Origin Address',
 		name: 'originAddress',
 		type: 'string',
 		required: true,
 		default: '',
-		displayOptions: { show: showOnlyForGetRoute },
+		displayOptions: { show: { ...showOnlyForGetRoute, originType: ['address'] } },
 		description: 'Starting address, e.g. "Brandenburg Gate, Berlin"',
 		routing: {
 			send: { type: 'body', property: 'origin.address', propertyInDotNotation: true },
 		},
+	},
+	{
+		displayName: 'Origin Latitude',
+		name: 'originLatitude',
+		type: 'number',
+		required: true,
+		default: 0,
+		displayOptions: { show: { ...showOnlyForGetRoute, originType: ['coordinates'] } },
+		description: 'Latitude of the starting point',
+		routing: {
+			send: { type: 'body', property: 'origin.location.latLng.latitude', propertyInDotNotation: true },
+		},
+	},
+	{
+		displayName: 'Origin Longitude',
+		name: 'originLongitude',
+		type: 'number',
+		required: true,
+		default: 0,
+		displayOptions: { show: { ...showOnlyForGetRoute, originType: ['coordinates'] } },
+		description: 'Longitude of the starting point',
+		routing: {
+			send: { type: 'body', property: 'origin.location.latLng.longitude', propertyInDotNotation: true },
+		},
+	},
+	{
+		displayName: 'Origin Place ID',
+		name: 'originPlaceId',
+		type: 'string',
+		required: true,
+		default: '',
+		displayOptions: { show: { ...showOnlyForGetRoute, originType: ['placeId'] } },
+		description: 'Google Place ID of the starting point',
+		routing: {
+			send: { type: 'body', property: 'origin.placeId', propertyInDotNotation: true },
+		},
+	},
+	{
+		displayName: 'Destination Type',
+		name: 'destinationType',
+		type: 'options',
+		default: 'address',
+		displayOptions: { show: showOnlyForGetRoute },
+		options: locationTypeOptions,
+		description:
+			'How the destination is specified. Coordinates and Place ID avoid a second geocoding call when chaining from a Geocode node.',
 	},
 	{
 		displayName: 'Destination Address',
@@ -30,10 +92,54 @@ export const getRouteFieldsDescription: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		default: '',
-		displayOptions: { show: showOnlyForGetRoute },
+		displayOptions: { show: { ...showOnlyForGetRoute, destinationType: ['address'] } },
 		description: 'Destination address, e.g. "Berlin Hauptbahnhof, Berlin"',
 		routing: {
 			send: { type: 'body', property: 'destination.address', propertyInDotNotation: true },
+		},
+	},
+	{
+		displayName: 'Destination Latitude',
+		name: 'destinationLatitude',
+		type: 'number',
+		required: true,
+		default: 0,
+		displayOptions: { show: { ...showOnlyForGetRoute, destinationType: ['coordinates'] } },
+		description: 'Latitude of the destination',
+		routing: {
+			send: {
+				type: 'body',
+				property: 'destination.location.latLng.latitude',
+				propertyInDotNotation: true,
+			},
+		},
+	},
+	{
+		displayName: 'Destination Longitude',
+		name: 'destinationLongitude',
+		type: 'number',
+		required: true,
+		default: 0,
+		displayOptions: { show: { ...showOnlyForGetRoute, destinationType: ['coordinates'] } },
+		description: 'Longitude of the destination',
+		routing: {
+			send: {
+				type: 'body',
+				property: 'destination.location.latLng.longitude',
+				propertyInDotNotation: true,
+			},
+		},
+	},
+	{
+		displayName: 'Destination Place ID',
+		name: 'destinationPlaceId',
+		type: 'string',
+		required: true,
+		default: '',
+		displayOptions: { show: { ...showOnlyForGetRoute, destinationType: ['placeId'] } },
+		description: 'Google Place ID of the destination',
+		routing: {
+			send: { type: 'body', property: 'destination.placeId', propertyInDotNotation: true },
 		},
 	},
 	{
