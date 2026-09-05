@@ -2,6 +2,7 @@ import type { INodeProperties } from 'n8n-workflow';
 import {
 	omitUnsupportedTravelModeOptions,
 	setRouteAdditionalFields,
+	setRouteFieldMask,
 	setRouteTimes,
 	validateWaypointCount,
 } from '../../GenericFunctions';
@@ -231,6 +232,18 @@ export const getRouteFieldsDescription: INodeProperties[] = [
 				value: '={{$value.map((address) => ({ address })) }}',
 				preSend: [validateWaypointCount],
 			},
+		},
+	},
+	{
+		displayName: 'Include Steps',
+		name: 'includeSteps',
+		type: 'boolean',
+		default: false,
+		displayOptions: { show: showOnlyForGetRoute },
+		description:
+			'Whether to include per-leg, turn-by-turn steps (with instructions and per-step polylines) in the response. Off by default, since the common "how far and how long" use case doesn\'t need them and they meaningfully bloat the stored execution data.',
+		routing: {
+			send: { preSend: [setRouteFieldMask] },
 		},
 	},
 	{

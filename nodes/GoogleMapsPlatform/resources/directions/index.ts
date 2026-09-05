@@ -25,8 +25,7 @@ export const directionsDescription: INodeProperties[] = [
 						baseURL: 'https://routes.googleapis.com',
 						url: '/directions/v2:computeRoutes',
 						headers: {
-							'X-Goog-FieldMask':
-								'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs',
+							'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline',
 						},
 					},
 				},

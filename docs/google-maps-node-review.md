@@ -161,7 +161,7 @@ A cheap structural test over the exported description catches most of that: ever
 ### Architecture
 - [x] Add an Additional Fields collection per operation, before adding any new optional field
 - [x] Add an input-type selector (Address / Coordinates / Place ID) for Route and Matrix waypoints -- shipped for Get Route's single Origin/Destination fields (non-breaking: existing `originAddress`/`destinationAddress` params and behavior are untouched, since Origin/Destination Type defaults to "Address"). The repeatable Waypoints/Origins/Destinations lists are intentionally out of scope here -- giving each list item its own type without breaking their existing `string[]` shape needs a versioned node (see [google-maps-node-implementation.md](google-maps-node-implementation.md) conventions), which wasn't taken on in this pass.
-- [ ] Make `routes.legs` conditional on an "Include Steps" toggle, default off
+- [x] Make `routes.legs` conditional on an "Include Steps" toggle, default off
 - [ ] Add a structural test over the node description
 
 ### Minor

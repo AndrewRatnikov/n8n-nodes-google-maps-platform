@@ -183,6 +183,22 @@ function buildRouteModifiers(additionalFields: IDataObject): IDataObject {
 	return routeModifiers;
 }
 
+const ROUTE_FIELD_MASK_BASE = 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline';
+const ROUTE_FIELD_MASK_WITH_STEPS = `${ROUTE_FIELD_MASK_BASE},routes.legs`;
+
+export async function setRouteFieldMask(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const includeSteps = this.getNodeParameter('includeSteps', false) as boolean;
+	const headers = (requestOptions.headers as IDataObject | undefined) ?? {};
+
+	headers['X-Goog-FieldMask'] = includeSteps ? ROUTE_FIELD_MASK_WITH_STEPS : ROUTE_FIELD_MASK_BASE;
+	requestOptions.headers = headers;
+
+	return requestOptions;
+}
+
 export async function setRouteAdditionalFields(
 	this: IExecuteSingleFunctions,
 	requestOptions: IHttpRequestOptions,

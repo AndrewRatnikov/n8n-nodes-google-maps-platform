@@ -9,6 +9,7 @@ import {
 	setGeocodeAdditionalFields,
 	setReverseGeocodeAdditionalFields,
 	setRouteAdditionalFields,
+	setRouteFieldMask,
 	setRouteTimes,
 	setTimezoneAdditionalFields,
 	validateRouteMatrixSize,
@@ -185,6 +186,26 @@ describe('setDistanceMatrixAdditionalFields', () => {
 				{ waypoint: { address: 'B' }, routeModifiers: { avoidHighways: true } },
 			],
 		});
+	});
+});
+
+describe('setRouteFieldMask', () => {
+	it('excludes routes.legs by default', async () => {
+		const ctx = createMockContext({ parameters: { includeSteps: false } });
+		const requestOptions = { url: 'https://routes.googleapis.com', headers: {} };
+		await setRouteFieldMask.call(ctx, requestOptions);
+		expect(requestOptions.headers['X-Goog-FieldMask']).toBe(
+			'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline',
+		);
+	});
+
+	it('includes routes.legs when Include Steps is on', async () => {
+		const ctx = createMockContext({ parameters: { includeSteps: true } });
+		const requestOptions = { url: 'https://routes.googleapis.com', headers: {} };
+		await setRouteFieldMask.call(ctx, requestOptions);
+		expect(requestOptions.headers['X-Goog-FieldMask']).toBe(
+			'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs',
+		);
 	});
 });
 
